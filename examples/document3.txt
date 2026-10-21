@@ -1,0 +1,3 @@
+fish swim
+cat eats fish
+dog runs fast

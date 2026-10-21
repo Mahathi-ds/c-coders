@@ -23,8 +23,8 @@ typedef struct
 
 #define EXTRA_SPACE_REMOVAL_FALSE \
     (Option){1, 1, 1, 0}
-
+void make_lower(char text[]);
 void text_normalization(char *text, Option opt);
 int sentence_split(char *text,char sentences[][500],int max_sentences);
-
+int calculate_tfidf(const char *files[],int number_of_files,const char *target_word);
 #endif

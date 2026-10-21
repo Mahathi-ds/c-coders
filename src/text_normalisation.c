@@ -30,7 +30,6 @@ void text_normalization(char *text, Option opt)
     {
         ch = text[i];
 
-        /* Handle whitespace */
         if (isspace((unsigned char)ch))
         {
             if (extra_space_removal)
@@ -52,21 +51,18 @@ void text_normalization(char *text, Option opt)
             continue;
         }
 
-        /* Remove digits */
         if (digit_removal && isdigit((unsigned char)ch))
         {
             i++;
             continue;
         }
 
-        /* Remove punctuation */
         if (punctuation_removal && ispunct((unsigned char)ch))
         {
             i++;
             continue;
         }
 
-        /* Remove non-printable characters */
         if (special_character_removal &&
             !isprint((unsigned char)ch))
         {
@@ -74,7 +70,6 @@ void text_normalization(char *text, Option opt)
             continue;
         }
 
-        /* Keep the character */
         text[j] = ch;
         j++;
         inside_space = 0;
@@ -82,7 +77,6 @@ void text_normalization(char *text, Option opt)
         i++;
     }
 
-    /* Remove trailing space */
     if (extra_space_removal && j > 0 && text[j - 1] == ' ')
     {
         j--;
