@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "project.h"
+#include "../include/project.h"
 
 #define MAX_TEXT 5000
 #define MAX_SENTENCES 20
@@ -15,29 +15,26 @@ int main(void)
     char *sentence_tokens[MAX_SENTENCES][MAX_WORDS];
     int sentence_token_count[MAX_SENTENCES];
 
-    int frequency[MAX_SENTENCES * MAX_WORDS];
     char *unique_words[MAX_SENTENCES * MAX_WORDS];
+    int frequency[MAX_SENTENCES * MAX_WORDS];
 
     int sentence_count;
-    int total_words = 0;
     int unique_count = 0;
-
-    int i, j, k;
-    int ch;
+    int i, j, k, ch;
 
     FILE *file;
 
     printf("\n========================================\n");
-    printf("       NLP PROCESSING PIPELINE\n");
+    printf("         NLP PROCESSING PIPELINE\n");
     printf("========================================\n");
 
-    /* STEP 1: TEXT NORMALIZATION */
+    /* STEP 1: READ AND NORMALIZE THE COMPLETE TEXT */
 
-    file = fopen("examples/sample_text.txt", "r");
+    file = fopen("examples/sample_document.txt", "r");
 
     if (file == NULL)
     {
-        printf("Error: Could not open examples/sample_text.txt\n");
+        printf("Error: Could not open sample_text.txt\n");
         return 1;
     }
 
@@ -54,11 +51,11 @@ int main(void)
 
     printf("\n========== STEP 1: TEXT NORMALIZATION ==========\n");
 
-    text_normalization(text, DEFAULT_OPTIONS);
+    text_normalization(text, PUNCTUATION_REMOVAL_FALSE);
 
     printf("%s\n", text);
 
-    /* STEP 2: SENTENCE SPLITTING */
+    /* STEP 2: SPLIT THE NORMALIZED TEXT INTO SENTENCES */
 
     printf("\n========== STEP 2: SENTENCE SPLITTING ==========\n");
 
@@ -76,40 +73,29 @@ int main(void)
     {
         printf("Sentence %d: %s\n", i + 1, sentences[i]);
     }
-    /* STEP 4: CASE NORMALIZATION */
 
-    printf("\n========== STEP 4: CASE NORMALIZATION ==========\n");
+    /* STEP 3: CASE NORMALIZATION OF EACH SENTENCE */
+
+    printf("\n========== STEP 3: CASE NORMALIZATION ==========\n");
 
     for (i = 0; i < sentence_count; i++)
     {
-        printf("Sentence %d: ", i + 1);
-
-        for (j = 0; j < sentence_token_count[i]; j++)
-        {
-            make_lower(sentence_tokens[i][j]);
-
-            printf("%s", sentence_tokens[i][j]);
-
-            if (j + 1 < sentence_token_count[i])
-            {
-                printf(" | ");
-            }
-        }
-
-        printf("\n");
+        make_lower(sentences[i]);
+        printf("Sentence %d: %s\n", i + 1, sentences[i]);
     }
 
-    /* STEP 3: WORD TOKENIZATION */
+    /* STEP 4: TOKENIZE EACH SENTENCE */
 
-    printf("\n========== STEP 3: WORD TOKENIZATION ==========\n");
+    printf("\n========== STEP 4: WORD TOKENIZATION ==========\n");
 
     for (i = 0; i < sentence_count; i++)
     {
         struct word **tokens;
-
-        tokens = word_tokenize(sentences[i]);
+        int count = 0;
 
         sentence_token_count[i] = 0;
+
+        tokens = word_tokenize(sentences[i]);
 
         if (tokens == NULL)
         {
@@ -117,53 +103,42 @@ int main(void)
             continue;
         }
 
-        printf("Sentence %d: ", i + 1);
-
-        j = 0;
-
-        while (tokens[j] != NULL && j < MAX_WORDS)
+        while (count < MAX_WORDS && tokens[count] != NULL)
         {
-            printf("%s", tokens[j]->data);
-
-            if (tokens[j + 1] != NULL && j + 1 < MAX_WORDS)
-            {
-                printf(" | ");
-            }
-
-            j++;
+            count++;
         }
 
-        printf("\n");
+        printf("Sentence %d: ", i + 1);
 
-        sentence_token_count[i] = j;
-
-        /*
-           Copy token text into our own arrays so the following
-           stages can process each sentence independently.
-        */
-        for (j = 0; j < sentence_token_count[i]; j++)
+        for (j = 0; j < count; j++)
         {
             sentence_tokens[i][j] =
                 malloc(strlen(tokens[j]->data) + 1);
 
             if (sentence_tokens[i][j] == NULL)
             {
-                printf("Memory allocation failed.\n");
+                printf("\nMemory allocation failed.\n");
                 return 1;
             }
 
             strcpy(sentence_tokens[i][j], tokens[j]->data);
+
+            printf("%s", sentence_tokens[i][j]);
+
+            if (j + 1 < count)
+            {
+                printf(" | ");
+            }
         }
 
-        total_words += sentence_token_count[i];
+        sentence_token_count[i] = count;
+        printf("\n");
 
         /*
-           The tokenizer's allocated memory is not freed here,
-           because its ownership and cleanup API are not known.
+           The tokenizer's allocated memory is left untouched
+           because its cleanup rules depend on its implementation.
         */
     }
-
-    
 
     /* STEP 5: STOP-WORD REMOVAL */
 
@@ -171,17 +146,11 @@ int main(void)
 
     for (i = 0; i < sentence_count; i++)
     {
+        char stopword_list[500][100];
+        int stopword_count;
         int write_position = 0;
 
-        /*
-           Test each word against the stop-word list.
-           This leaves the original stop_words() and
-           remove_stopwords() implementations untouched.
-        */
-        char stopword_list[500][100];
-        int stopword_count = stop_words(stopword_list);
-
-        printf("Sentence %d: ", i + 1);
+        stopword_count = stop_words(stopword_list);
 
         for (j = 0; j < sentence_token_count[i]; j++)
         {
@@ -197,20 +166,22 @@ int main(void)
                 }
             }
 
-            if (!is_stopword)
+            if (is_stopword)
+            {
+                free(sentence_tokens[i][j]);
+            }
+            else
             {
                 sentence_tokens[i][write_position] =
                     sentence_tokens[i][j];
 
                 write_position++;
             }
-            else
-            {
-                free(sentence_tokens[i][j]);
-            }
         }
 
         sentence_token_count[i] = write_position;
+
+        printf("Sentence %d: ", i + 1);
 
         for (j = 0; j < sentence_token_count[i]; j++)
         {
@@ -226,42 +197,52 @@ int main(void)
     }
 
     /* STEP 6: WORD FREQUENCY ANALYSIS */
+    /* STEP 6: WORD FREQUENCY ANALYSIS */
 
-    printf("\n========== STEP 6: WORD FREQUENCY ==========\n");
+printf("\n========== STEP 6: WORD FREQUENCY ==========\n");
 
-    for (i = 0; i < sentence_count; i++)
+TokenList all_tokens;
+FreqList *freq_list;
+
+char *combined_tokens[MAX_SENTENCES * MAX_WORDS];
+int total_tokens = 0;
+
+/* Collect remaining tokens from all sentences */
+for (i = 0; i < sentence_count; i++)
+{
+    for (j = 0; j < sentence_token_count[i]; j++)
     {
-        for (j = 0; j < sentence_token_count[i]; j++)
-        {
-            int found = 0;
+        combined_tokens[total_tokens] = sentence_tokens[i][j];
+        total_tokens++;
+    }
+}
 
-            for (k = 0; k < unique_count; k++)
-            {
-                if (strcmp(unique_words[k],
-                           sentence_tokens[i][j]) == 0)
-                {
-                    frequency[k]++;
-                    found = 1;
-                    break;
-                }
-            }
+/* Create one TokenList containing all remaining words */
+all_tokens.tokens = combined_tokens;
+all_tokens.count = (size_t)total_tokens;
 
-            if (!found)
-            {
-                unique_words[unique_count] = sentence_tokens[i][j];
-                frequency[unique_count] = 1;
-                unique_count++;
-            }
-        }
+/* Use the frequency.c implementation */
+freq_list = nlp_word_frequency(&all_tokens);
+
+if (freq_list == NULL)
+{
+    printf("Word frequency calculation failed.\n");
+}
+else
+{
+    for (i = 0; i < (int)freq_list->count; i++)
+    {
+        printf("%s : %d\n",
+               freq_list->frequencies[i].word,
+               freq_list->frequencies[i].count);
     }
 
-    for (i = 0; i < unique_count; i++)
-    {
-        printf("%s : %d\n", unique_words[i], frequency[i]);
-    }
-     /* STEP 8: STEMMING */
+    free(freq_list->frequencies);
+    free(freq_list);
+}
+    /* STEP 7: STEM THE REMAINING WORDS */
 
-    printf("\n========== STEP 8: STEMMING ==========\n");
+    printf("\n========== STEP 7: STEMMING ==========\n");
 
     for (i = 0; i < sentence_count; i++)
     {
@@ -277,21 +258,14 @@ int main(void)
             {
                 printf(" | ");
             }
-
-            free(sentence_tokens[i][j]);
         }
 
         printf("\n");
     }
 
-    printf("\n========== PIPELINE COMPLETED ==========\n");
+    /* STEP 8: GENERATE BIGRAMS FROM STEMMED WORDS */
 
-    return 0;
-}
-
-    /* STEP 7: BIGRAM GENERATION */
-
-    printf("\n========== STEP 7: BIGRAM GENERATION (N = 2) ==========\n");
+    printf("\n========== STEP 8: BIGRAM GENERATION (N = 2) ==========\n");
 
     for (i = 0; i < sentence_count; i++)
     {
@@ -321,4 +295,17 @@ int main(void)
         free(bigrams);
     }
 
-   
+    /* RELEASE THE COPIED TOKENS */
+
+    for (i = 0; i < sentence_count; i++)
+    {
+        for (j = 0; j < sentence_token_count[i]; j++)
+        {
+            free(sentence_tokens[i][j]);
+        }
+    }
+
+    printf("\n========== PIPELINE COMPLETED ==========\n");
+
+    return 0;
+}
