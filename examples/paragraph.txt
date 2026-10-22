@@ -1,0 +1,2 @@
+Hello world! Welcome to NLP. How are you?
+Text processing is interesting. We are building an NLP library!

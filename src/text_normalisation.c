@@ -6,10 +6,9 @@
 
 void text_normalization(char *text, Option opt)
 {
-    int digit_removal = 1;
-    int punctuation_removal = 1;
-    int special_character_removal = 1;
-    int extra_space_removal = 1;
+    int digit_removal = opt.digit_removal;
+    int punctuation_removal = opt.punctuation_removal;
+    int special_character_removal = opt.special_character_removal;
 
     int i = 0;
     int j = 0;
@@ -21,48 +20,39 @@ void text_normalization(char *text, Option opt)
         return;
     }
 
-    digit_removal = opt.digit_removal;
-    punctuation_removal = opt.punctuation_removal;
-    special_character_removal = opt.special_character_removal;
-    extra_space_removal = opt.extra_space_removal;
-
     while (text[i] != '\0')
     {
         ch = text[i];
 
+        /* Always remove extra spaces */
         if (isspace((unsigned char)ch))
         {
-            if (extra_space_removal)
+            if (j > 0 && inside_space == 0)
             {
-                if (j > 0 && inside_space == 0)
-                {
-                    text[j] = ' ';
-                    j++;
-                    inside_space = 1;
-                }
-            }
-            else
-            {
-                text[j] = ch;
+                text[j] = ' ';
                 j++;
+                inside_space = 1;
             }
 
             i++;
             continue;
         }
 
+        /* Remove digits if enabled */
         if (digit_removal && isdigit((unsigned char)ch))
         {
             i++;
             continue;
         }
 
+        /* Remove punctuation if enabled */
         if (punctuation_removal && ispunct((unsigned char)ch))
         {
             i++;
             continue;
         }
 
+        /* Remove non-printable characters if enabled */
         if (special_character_removal &&
             !isprint((unsigned char)ch))
         {
@@ -77,7 +67,8 @@ void text_normalization(char *text, Option opt)
         i++;
     }
 
-    if (extra_space_removal && j > 0 && text[j - 1] == ' ')
+    /* Remove trailing space */
+    if (j > 0 && text[j - 1] == ' ')
     {
         j--;
     }
