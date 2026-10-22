@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include <assert.h>
 #include<string.h>
-#include "nlp.h"
+#include "project.h"
 void test_spl_chars(){
     char text[]="HelLo@123 WORLD";
     make_lower(text);

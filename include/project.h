@@ -1,3 +1,4 @@
+
 #ifndef PROJECT_H
 #define PROJECT_H
 
@@ -26,8 +27,18 @@ typedef struct
 #define SPECIAL_CHARACTER_REMOVAL_FALSE \
     (Option){1, 1, 0, 1}
 
-#define EXTRA_SPACE_REMOVAL_FALSE \
-    (Option){1, 1, 1, 0}
+#define KEEP_DIGITS_AND_PUNCTUATION \
+    (Option){0, 0, 1, 1}
+
+#define KEEP_DIGITS_AND_SPECIAL \
+    (Option){0, 1, 0, 1}
+
+#define KEEP_PUNCTUATION_AND_SPECIAL \
+    (Option){1, 0, 0, 1}
+
+#define KEEP_ALL \
+    (Option){0, 0, 0, 1}
+
 int make_lower(char text[]);
 int make_upper(char text[]);
 
