@@ -14,8 +14,8 @@ void test_normal() {
 }
 
 void test_punctuation() {
-    char text[] = "Hello, World!";
-    struct word **lst = word_tokenize(text);
+    char text1[] = "Hello, World!";
+    struct word **lst = word_tokenize(text1);
     printf("\nPunctuation case:\n");
     for(int i=0; i<rear; i++){
         printf("%s\n",lst[i]->data);
@@ -23,8 +23,8 @@ void test_punctuation() {
 }
 
 void test_digits() {
-    char text[] = "NLP123";
-    struct word **lst = word_tokenize(text);
+    char text2[] = "NLP123";
+    struct word **lst = word_tokenize(text2);
     printf("\nDigits case:\n");
     for(int i=0; i<rear; i++){
         printf("%s\n",lst[i]->data);

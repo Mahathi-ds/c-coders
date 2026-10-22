@@ -1,2 +1,0 @@
-cat eats fish
-cat likes milk

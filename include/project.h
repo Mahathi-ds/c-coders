@@ -53,4 +53,35 @@ extern int rear;
 struct word *create(void);
 struct word **word_tokenize(char text[]);
 
+
+#include <stddef.h>
+
+typedef struct {
+    char **tokens;      
+    size_t count;       
+    size_t capacity;    
+} TokenList;
+
+typedef struct {
+    char *word;
+    int count;
+} WordFreq;
+
+typedef struct {
+    WordFreq *frequencies;
+    size_t count;
+    size_t capacity;
+} FreqList;
+
+
+TokenList *nlp_token_list_create(size_t initial_capacity);
+void nlp_token_list_free(TokenList *list);
+
+
+void nlp_normalize_case(char *text);
+TokenList *nlp_tokenize_words(const char *text);
+void nlp_stem_word(char *word);
+FreqList *nlp_word_frequency(TokenList *tokens);
+TokenList *nlp_generate_ngrams(TokenList *tokens, int n);
+
 #endif

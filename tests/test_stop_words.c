@@ -5,18 +5,19 @@
 
 
 void test_normal() {
-    char text[] = "This is a beautiful day";
-    char *words[] = {"This", "is", "a", "beautiful", "day"};   
-    remove_stopwords(words);
+    char words[] = "This is a beautiful day";
+    struct word **lst = word_tokenize(words);   
+    remove_stopwords(lst);
     printf("\nNormal case:\n");
     for(int i=0; i<rear; i++){
-        printf("%s\n",words[i]);
+        printf("%s\n",lst[i]->data);
     }
 }
 
 void test_only_stopwords() {
-    char *words[] = {"the", "is", "a", "an", "and"};
-    remove_stopwords(words);
+    char words[] = "i was doing it for them";
+    struct word **lst = word_tokenize(words);
+    remove_stopwords(lst);
     printf("\nOnly stopwords:\n");
     printf("Expected tokens: 0\n");
     printf("Actual tokens: %d\n",rear);
@@ -27,8 +28,9 @@ void test_only_stopwords() {
 }
 
 void test_no_stopwords() {
-    char *words[] = {"cat", "dog", "elephant"};
-    remove_stopwords(words);
+    char words[] = "cat dog elephant";
+    struct word **lst = word_tokenize(words);
+    remove_stopwords(lst);
     printf("\nNo stopwords:\n");
     if(rear == 3)
         printf("PASS\n");
@@ -37,7 +39,8 @@ void test_no_stopwords() {
 }
 
 void test_empty() {
-    struct word *lst[1] = {NULL};
+    char words[] = "";
+    struct word **lst = word_tokenize(words);
     rear = 0;
 
     remove_stopwords(lst);
@@ -50,23 +53,23 @@ void test_empty() {
 }
 
 void test_repeated() {
-    char *words[] = {"the", "the", "cat", "is", "is", "sleeping"};
-    remove_stopwords(words);
+    char words[] = "the the cat is is sleeping";
+    struct word **lst = word_tokenize(words);
+    remove_stopwords(lst);
     printf("\nRepeated stopwords:\n");
     for(int i=0; i<rear; i++){
-        printf("%s\n",words[i]);
+        printf("%s\n",lst[i]->data);
         }
     }
 
 void test_large_input() {
-    char *words[900];
+    char words[4000] = "";
 
-    for(int i=0; i<900; i++){
-        words[i] = "the";
+    for(int i = 0; i < 900; i++){
+        strcat(words, "the ");
     }
-   
-
-    remove_stopwords(words);
+    struct word **lst = word_tokenize(words);
+    remove_stopwords(lst);
 
     printf("\nLarge input:\n");
     printf("Expected tokens: 0\n");
