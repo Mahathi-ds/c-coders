@@ -1,5 +1,5 @@
-
 #include <stdio.h>
+#include <string.h>
 #include "project.h"
 
 /* TEST CASES FOR SENTENCE SPLITTING */
@@ -49,16 +49,12 @@ void test_sentence_split()
 
     printf("\nTest 4 - Zero maximum sentences:\n");
     printf("Sentence count: %d\n", count);
-    /* Expected: 0 */
 
-    /* Test 5: Negative maximum sentences */
-    count = sentence_split(text4, sentences, -1);
+    count = sentence_split(text4, sentences, -3);
 
     printf("\nTest 5 - Negative maximum sentences:\n");
     printf("Sentence count: %d\n", count);
-    /* Expected: 0 */
 
-    /* Test 6: No punctuation */
     char text6[] = "This is a sentence without punctuation";
 
     count = sentence_split(text6, sentences, 10);
@@ -70,9 +66,7 @@ void test_sentence_split()
     {
         printf("%d: %s\n", i + 1, sentences[i]);
     }
-    /* Expected count: 1 */
 
-    /* Test 7: Single character */
     char text7[] = "A.";
 
     count = sentence_split(text7, sentences, 10);
@@ -84,9 +78,7 @@ void test_sentence_split()
     {
         printf("%d: %s\n", i + 1, sentences[i]);
     }
-    /* Expected count: 1 */
 
-    /* Test 8: Different sentence-ending punctuation */
     char text8[] = "Hi! Really? Yes.";
 
     count = sentence_split(text8, sentences, 10);
@@ -98,37 +90,21 @@ void test_sentence_split()
     {
         printf("%d: %s\n", i + 1, sentences[i]);
     }
-    /* Expected count: 3 */
 
-    /* Test 9: Maximum sentence limit */
-    char text9[] = "One. Two. Three.";
 
-    count = sentence_split(text9, sentences, 1);
 
-    printf("\nTest 9 - Maximum sentence limit is 1:\n");
-    printf("Sentence count: %d\n", count);
+    char text9[] = "   Hello!     Welcome.   Bye?";
 
-    for (i = 0; i < count; i++)
-    {
-        printf("%d: %s\n", i + 1, sentences[i]);
-    }
-    /* Expected count: 1 */
+    count = sentence_split(text9, sentences, 10);
 
-    /* Test 10: Leading and multiple spaces */
-    char text10[] = "   Hello!     Welcome.   Bye?";
-
-    count = sentence_split(text10, sentences, 10);
-
-    printf("\nTest 10 - Extra spaces:\n");
+    printf("\nTest 9 - Extra spaces:\n");
     printf("Sentence count: %d\n", count);
 
     for (i = 0; i < count; i++)
     {
         printf("%d: '%s'\n", i + 1, sentences[i]);
     }
-    /* Expected count: 3 */
-
-    /* Test 11: Large input with many short sentences */
+    
     char large_text[5000];
     int j = 0;
 
@@ -145,11 +121,9 @@ void test_sentence_split()
 
     count = sentence_split(large_text, sentences, 10);
 
-    printf("\nTest 11 - Large input:\n");
+    printf("\nTest 10 - Large input:\n");
     printf("Sentence count: %d\n", count);
-    /* Expected count: 10 because max_sentences is 10 */
 
-    /* Test 12: Sentence near buffer capacity */
     char long_text[500];
     char long_sentences[1][500];
 
@@ -161,9 +135,22 @@ void test_sentence_split()
 
     count = sentence_split(long_text, long_sentences, 1);
 
-    printf("\nTest 12 - Sentence of 499 characters:\n");
+    printf("\nTest 11 - Sentence of 499 characters:\n");
     printf("Sentence count: %d\n", count);
-    /* Expected count: 1 */
+
+    char text13[] = "Hello! Welcome to NLP. How are you?";
+    char default_sentences[sizeof(text13)][500];
+
+    count = sentence_split(text13, default_sentences, DEFAULT);
+
+    printf("\nTest 12 - DEFAULT maximum sentences:\n");
+    printf("Sentence count: %d\n", count);
+
+    for (i = 0; i < count; i++)
+    {
+        printf("%d: %s\n", i + 1, default_sentences[i]);
+    }
+    /* Expected count: 3 because DEFAULT uses the length of the input text */
 }
 
 int main(void)

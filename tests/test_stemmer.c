@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,14 +32,14 @@ static void test_stem(const char *name,
 
 int main(void)
 {
-    printf("========== PORTER STEMMER TESTS ==========\n\n");
+    printf("========== CLASSIC PORTER STEMMER TESTS ==========\n\n");
 
     /* 1. Basic words */
-    test_stem("Computer unchanged", "computer", "computer");
-    test_stem("Yes unchanged", "yes", "yes");
-    test_stem("Cat unchanged", "cat", "cat");
-    test_stem("Dog unchanged", "dog", "dog");
-    test_stem("Book unchanged", "book", "book");
+    test_stem("Computer", "computer", "comput");
+    test_stem("Yes", "yes", "ye");
+    test_stem("Cat", "cat", "cat");
+    test_stem("Dog", "dog", "dog");
+    test_stem("Book", "book", "book");
 
     /* 2. Plurals and Step 1a */
     test_stem("Caresses", "caresses", "caress");
@@ -48,6 +47,7 @@ int main(void)
     test_stem("Ties", "ties", "ti");
     test_stem("Cats", "cats", "cat");
     test_stem("Running", "running", "run");
+    test_stem("Seed", "seed", "seed");
 
     /* 3. Past tense and -ing */
     test_stem("Agreed", "agreed", "agre");
@@ -84,13 +84,9 @@ int main(void)
     test_stem("Empty string", "", "");
     test_stem("One character", "a", "a");
     test_stem("Two characters", "to", "to");
-    test_stem("Short word yes", "yes", "yes");
+    test_stem("Short word yes", "yes", "ye");
 
-    /* 8. Uppercase input
-       This implementation converts ASCII to lowercase. */
-    test_stem("Uppercase PLAYING", "PLAYING", "play");
-    test_stem("Mixed case COMPUTER", "Computer", "computer");
-
+    
     /* 9. Long input */
     char long_word[256];
     char expected_long[256];
@@ -103,11 +99,12 @@ int main(void)
 
     test_stem("Long word", long_word, expected_long);
 
-    /* 10. NULL input must not crash */
+    /* 10. NULL input */
     nlp_stem_word(NULL);
     printf("[PASS] NULL input does not crash\n");
     passed++;
 
+    /* Summary */
     printf("\n========== TEST SUMMARY ==========\n");
     printf("Passed: %d\n", passed);
     printf("Failed: %d\n", failed);

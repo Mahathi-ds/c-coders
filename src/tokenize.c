@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
-#include <ctype.h>
+#include<ctype.h>
 #include "project.h"
 
 
@@ -46,8 +46,7 @@ struct word **word_tokenize(char text[]){
         stack[rear]=new;
         rear++;}
         if(ispunct(text[j]) || isdigit(text[j])){
-            
-
+    
 
             struct word *token=create();
             token->data[token->idx]=text[j];

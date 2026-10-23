@@ -24,7 +24,6 @@ int remove_stopwords(struct word *tokens[]){
     }
     char stopwords[1000][100];
     int count = stop_words(stopwords);
-    printf("count:%d",count);
 
     if (count == -1) {
         return -1;
@@ -32,6 +31,8 @@ int remove_stopwords(struct word *tokens[]){
 
     int i = 0;
     while (i < rear) {
+        make_lower(tokens[i]->data);
+
         int found=0;
         for (int j=0;j<count;j++){
             if(strcmp(tokens[i]->data,stopwords[j])==0){

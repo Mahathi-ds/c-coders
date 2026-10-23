@@ -39,6 +39,11 @@ typedef struct
 #define KEEP_ALL \
     (Option){0, 0, 0, 1}
 
+
+#define DEFAULT -1
+#define SENTENCE_SIZE 500
+
+int sentence_split(char *text, char sentences[][SENTENCE_SIZE],int max_sentences);
 int make_lower(char text[]);
 int make_upper(char text[]);
 

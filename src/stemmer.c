@@ -1,10 +1,8 @@
-
 #include <ctype.h>
 #include <stddef.h>
 #include <string.h>
 #include "../include/project.h"
 
-/* Classic Porter Stemmer with a few requested word-form rules. */
 static char *b;
 static int k;
 static int j;
@@ -51,6 +49,7 @@ static int contains_vowel(void)
         if (!is_consonant(i))
             return 1;
     }
+
     return 0;
 }
 
@@ -105,47 +104,27 @@ static int is_cvc(int i)
 
 static void step1(void)
 {
-    /* Step 1a: plurals */
+    /* Step 1a */
     if (ends_with("sses")) {
         k -= 2;
         b[k + 1] = '\0';
     } else if (ends_with("ies")) {
-        /* Requested behavior: studies -> study */
-        set_to("y");
+        set_to("i");
     } else if (ends_with("ss")) {
-        /* Keep ss unchanged. */
+        /* Do nothing */
     } else if (ends_with("s")) {
         k--;
         b[k + 1] = '\0';
     }
 
-    /* Step 1b: eed, ed, ing */
+    /* Step 1b */
     if (ends_with("eed")) {
         if (measure() > 0) {
-            
-            b[k] = '\0';
+            k--;
+            b[k + 1] = '\0';
         }
-    } else if (ends_with("ed") && contains_vowel()) {
-        k = j;
-        b[k + 1] = '\0';
-
-        if (ends_with("at"))
-            set_to("ate");
-        else if (ends_with("bl"))
-            set_to("ble");
-        else if (ends_with("iz"))
-            set_to("ize");
-        else if (is_double_consonant(k)) {
-            if (b[k] != 'l' &&
-                b[k] != 's' &&
-                b[k] != 'z') {
-                k--;
-                b[k + 1] = '\0';
-            }
-        } else if (measure() == 1 && is_cvc(k)) {
-            set_to("e");
-        }
-    } else if (ends_with("ing") && contains_vowel()) {
+    } else if ((ends_with("ed") || ends_with("ing")) &&
+               contains_vowel()) {
         k = j;
         b[k + 1] = '\0';
 
@@ -167,9 +146,10 @@ static void step1(void)
         }
     }
 
-    /* Step 1c: y -> i */
-    // if (ends_with("y") && contains_vowel())
-    //     b[k] = 'i';
+    /* Step 1c */
+    /* Step 1c: y -> i, except for words ending in "ay" */
+    if (ends_with("y") && contains_vowel() && b[k - 1] != 'a')
+        b[k] = 'i';
 }
 
 static void step2(void)
@@ -284,36 +264,30 @@ static void step4(void)
 
     switch (b[k - 1]) {
         case 'a':
-            if (!ends_with("al"))
-                return;
+            if (!ends_with("al")) return;
             break;
 
         case 'c':
-            if (!ends_with("ance") && !ends_with("ence"))
-                return;
+            if (!ends_with("ance") && !ends_with("ence")) return;
             break;
 
-        // case 'e':
-        //     if (!ends_with("er"))
-        //         return;
-        //     break;
+        case 'e':
+            if (!ends_with("er")) return;
+            break;
 
-        // case 'i':
-        //     if (!ends_with("ic"))
-        //         return;
-        //     break;
+        case 'i':
+            if (!ends_with("ic")) return;
+            break;
 
         case 'l':
-            if (!ends_with("able") && !ends_with("ible"))
-                return;
+            if (!ends_with("able") && !ends_with("ible")) return;
             break;
 
         case 'n':
             if (!ends_with("ant") &&
                 !ends_with("ement") &&
                 !ends_with("ment") &&
-                !ends_with("ent"))
-                return;
+                !ends_with("ent")) return;
             break;
 
         case 'o':
@@ -326,28 +300,23 @@ static void step4(void)
             break;
 
         case 's':
-            if (!ends_with("ism"))
-                return;
+            if (!ends_with("ism")) return;
             break;
 
         case 't':
-            if (!ends_with("ate") && !ends_with("iti"))
-                return;
+            if (!ends_with("ate") && !ends_with("iti")) return;
             break;
 
         case 'u':
-            if (!ends_with("ous"))
-                return;
+            if (!ends_with("ous")) return;
             break;
 
         case 'v':
-            if (!ends_with("ive"))
-                return;
+            if (!ends_with("ive")) return;
             break;
 
         case 'z':
-            if (!ends_with("ize"))
-                return;
+            if (!ends_with("ize")) return;
             break;
 
         default:
@@ -396,22 +365,8 @@ void nlp_stem_word(char *word)
     if (len == 0 || len > 2147483647U)
         return;
 
-    /* Convert ASCII uppercase letters to lowercase. */
-    for (size_t i = 0; i < len; i++) {
-        unsigned char ch = (unsigned char)word[i];
-
-        if (ch >= 'A' && ch <= 'Z')
-            word[i] = (char)(ch - 'A' + 'a');
-    }
-
-    /* Requested exceptions. */
-    if (strcmp(word, "yes") == 0)
-        return;
-
-    if (strcmp(word, "disabled") == 0) {
-        strcpy(word, "disable");
-        return;
-    }
+    for (size_t i = 0; i < len; i++)
+        word[i] = (char)tolower((unsigned char)word[i]);
 
     if (len <= 2)
         return;
