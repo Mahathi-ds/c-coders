@@ -51,7 +51,7 @@ int main(void)
 
     printf("\n========== STEP 1: TEXT NORMALIZATION ==========\n");
 
-    text_normalization(text, DEFAULT_OPTIONS);
+    text_normalization(text, PUNCTUATION_REMOVAL_FALSE);
 
     printf("%s\n", text);
 

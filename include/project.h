@@ -89,4 +89,19 @@ void nlp_stem_word(char *word);
 FreqList *nlp_word_frequency(TokenList *tokens);
 TokenList *nlp_generate_ngrams(TokenList *tokens, int n);
 
+
+typedef struct {
+    int **vectors;
+    int num_docs;
+    int vocab_size;
+
+    char **vocab;
+} VectorizerResult;
+
+typedef struct {
+    char **words;
+    int size;
+    int capacity;
+} Vocab;
+
 #endif

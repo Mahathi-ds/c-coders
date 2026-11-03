@@ -171,7 +171,6 @@ int main(void) {
     test_large_input();
     test_only_punctuation();
 
-    printf("\n========== TESTING COMPLETED ==========\n");
 
     return 0;
 }

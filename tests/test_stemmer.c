@@ -34,14 +34,12 @@ int main(void)
 {
     printf("========== CLASSIC PORTER STEMMER TESTS ==========\n\n");
 
-    /* 1. Basic words */
     test_stem("Computer", "computer", "comput");
     test_stem("Yes", "yes", "ye");
     test_stem("Cat", "cat", "cat");
     test_stem("Dog", "dog", "dog");
     test_stem("Book", "book", "book");
 
-    /* 2. Plurals and Step 1a */
     test_stem("Caresses", "caresses", "caress");
     test_stem("Ponies", "ponies", "poni");
     test_stem("Ties", "ties", "ti");
@@ -49,7 +47,6 @@ int main(void)
     test_stem("Running", "running", "run");
     test_stem("Seed", "seed", "seed");
 
-    /* 3. Past tense and -ing */
     test_stem("Agreed", "agreed", "agre");
     test_stem("Disabled", "disabled", "disabl");
     test_stem("Matting", "matting", "mat");
@@ -58,7 +55,6 @@ int main(void)
     test_stem("Milling", "milling", "mill");
     test_stem("Messing", "messing", "mess");
 
-    /* 4. Step 2 suffixes */
     test_stem("Relational", "relational", "relat");
     test_stem("Conditional", "conditional", "condit");
     test_stem("Rational", "rational", "ration");
@@ -66,29 +62,25 @@ int main(void)
               "vietnamization", "vietnam");
     test_stem("Digitizer", "digitizer", "digit");
 
-    /* 5. Step 3 suffixes */
     test_stem("Triplicate", "triplicate", "triplic");
     test_stem("Formalize", "formalize", "formal");
     test_stem("Electrical", "electrical", "electr");
     test_stem("Hopeful", "hopeful", "hope");
     test_stem("Goodness", "goodness", "good");
 
-    /* 6. Step 4 suffixes */
     test_stem("Revival", "revival", "reviv");
     test_stem("Allowance", "allowance", "allow");
     test_stem("Inference", "inference", "infer");
     test_stem("Airliner", "airliner", "airlin");
     test_stem("Gyroscopic", "gyroscopic", "gyroscop");
 
-    /* 7. Boundary cases */
     test_stem("Empty string", "", "");
     test_stem("One character", "a", "a");
     test_stem("Two characters", "to", "to");
     test_stem("Short word yes", "yes", "ye");
 
     
-    /* 9. Long input */
-    char long_word[256];
+=    char long_word[256];
     char expected_long[256];
 
     memset(long_word, 'a', 200);
@@ -99,12 +91,10 @@ int main(void)
 
     test_stem("Long word", long_word, expected_long);
 
-    /* 10. NULL input */
     nlp_stem_word(NULL);
     printf("[PASS] NULL input does not crash\n");
     passed++;
 
-    /* Summary */
     printf("\n========== TEST SUMMARY ==========\n");
     printf("Passed: %d\n", passed);
     printf("Failed: %d\n", failed);

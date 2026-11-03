@@ -6,7 +6,7 @@
 
 
 
-struct word *stack[1000];  /*array of structs word*/
+struct word *stack[1000];  
 int rear=0;
 
 struct word *create(){
