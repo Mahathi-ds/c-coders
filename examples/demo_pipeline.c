@@ -84,13 +84,14 @@ int main(void)
         printf("Sentence %d: %s\n", i + 1, sentences[i]);
     }
 
+    
     /* STEP 4: TOKENIZE EACH SENTENCE */
 
     printf("\n========== STEP 4: WORD TOKENIZATION ==========\n");
 
     for (i = 0; i < sentence_count; i++)
     {
-        struct word **tokens;
+        struct word *tokens;
         int count = 0;
 
         sentence_token_count[i] = 0;
@@ -103,17 +104,15 @@ int main(void)
             continue;
         }
 
-        while (count < MAX_WORDS && tokens[count] != NULL)
-        {
-            count++;
-        }
+        // Get the number of tokens generated
+        count = rear;
 
         printf("Sentence %d: ", i + 1);
 
-        for (j = 0; j < count; j++)
+        for (j = 0; j < count && j < MAX_WORDS; j++)
         {
             sentence_tokens[i][j] =
-                malloc(strlen(tokens[j]->data) + 1);
+                malloc(strlen(tokens[j].data) + 1);
 
             if (sentence_tokens[i][j] == NULL)
             {
@@ -121,82 +120,84 @@ int main(void)
                 return 1;
             }
 
-            strcpy(sentence_tokens[i][j], tokens[j]->data);
+            strcpy(sentence_tokens[i][j], tokens[j].data);
 
             printf("%s", sentence_tokens[i][j]);
 
-            if (j + 1 < count)
+            if (j + 1 < count && j + 1 < MAX_WORDS)
             {
                 printf(" | ");
             }
         }
 
-        sentence_token_count[i] = count;
-        printf("\n");
+        // Store the actual number of tokens copied
+        sentence_token_count[i] = (count < MAX_WORDS) ? count : MAX_WORDS;
 
-        /*
-           The tokenizer's allocated memory is left untouched
-           because its cleanup rules depend on its implementation.
-        */
+        printf("\n");
     }
 
-    /* STEP 5: STOP-WORD REMOVAL */
 
-    printf("\n========== STEP 5: STOP-WORD REMOVAL ==========\n");
+   
+    
+/* STEP 5: STOP-WORD REMOVAL */
 
-    for (i = 0; i < sentence_count; i++)
+printf("\n========== STEP 5: STOP-WORD REMOVAL ==========\n");
+
+int keep_negations = 1;
+
+for (i = 0; i < sentence_count; i++)
+{
+    struct word temp_tokens[MAX_WORDS];
+
+    int old_count = sentence_token_count[i];
+
+    // Convert char* tokens into struct word tokens
+    for (j = 0; j < old_count; j++)
     {
-        char stopword_list[500][100];
-        int stopword_count;
-        int write_position = 0;
-
-        stopword_count = stop_words(stopword_list);
-
-        for (j = 0; j < sentence_token_count[i]; j++)
-        {
-            int is_stopword = 0;
-
-            for (k = 0; k < stopword_count; k++)
-            {
-                if (strcmp(sentence_tokens[i][j],
-                           stopword_list[k]) == 0)
-                {
-                    is_stopword = 1;
-                    break;
-                }
-            }
-
-            if (is_stopword)
-            {
-                free(sentence_tokens[i][j]);
-            }
-            else
-            {
-                sentence_tokens[i][write_position] =
-                    sentence_tokens[i][j];
-
-                write_position++;
-            }
-        }
-
-        sentence_token_count[i] = write_position;
-
-        printf("Sentence %d: ", i + 1);
-
-        for (j = 0; j < sentence_token_count[i]; j++)
-        {
-            printf("%s", sentence_tokens[i][j]);
-
-            if (j + 1 < sentence_token_count[i])
-            {
-                printf(" | ");
-            }
-        }
-
-        printf("\n");
+        strcpy(temp_tokens[j].data, sentence_tokens[i][j]);
     }
 
-    /* STEP 6: WORD FREQUENCY ANALYSIS */
+    // Set rear to the number of tokens in this sentence
+    rear = old_count;
+
+    // Call the actual library function
+    int status = remove_stopwords(temp_tokens, keep_negations);
+
+    if (status == -1)
+    {
+        printf("Stop-word removal failed for sentence %d.\n", i + 1);
+        continue;
+    }
+
+    // Copy the remaining tokens back into sentence_tokens
+    for (j = 0; j < rear; j++)
+    {
+        strcpy(sentence_tokens[i][j], temp_tokens[j].data);
+    }
+
+    // Free the strings corresponding to removed tokens
+    for (j = rear; j < old_count; j++)
+    {
+        free(sentence_tokens[i][j]);
+        sentence_tokens[i][j] = NULL;
+    }
+
+    sentence_token_count[i] = rear;
+
+    printf("Sentence %d: ", i + 1);
+
+    for (j = 0; j < sentence_token_count[i]; j++)
+    {
+        printf("%s", sentence_tokens[i][j]);
+
+        if (j + 1 < sentence_token_count[i])
+            printf(" | ");
+    }
+
+    printf("\n");
+}
+
+
     /* STEP 6: WORD FREQUENCY ANALYSIS */
 
 printf("\n========== STEP 6: WORD FREQUENCY ==========\n");

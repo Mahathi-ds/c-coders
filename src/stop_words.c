@@ -2,10 +2,23 @@
 #include "project.h"
 #include<stdlib.h>
 #include<string.h>
+
+int is_negation(char *word)
+{
+    char *negations[] = {"no", "not", "nor"};
+
+    for (int i = 0; i < 3; i++)
+    {
+        if (strcmp(word, negations[i]) == 0)
+            return 1;
+    }
+
+    return 0;
+}
 int stop_words(char stopwords[][100]){
 
 
-    FILE *fp=fopen("C:/Users/ctrl2/Downloads/EN-Stopwords.txt","r");
+    FILE *fp = fopen("data/EN-Stopwords.txt", "r");
     if(fp==NULL){
         perror("Error opening stopwords file");
         return -1;
@@ -18,7 +31,7 @@ int stop_words(char stopwords[][100]){
     return count;
 }
 
-int remove_stopwords(struct word *tokens[]){
+int remove_stopwords(struct word *tokens,int keep_negations){
     if(tokens==NULL || rear==0){
         return -1;
     }
@@ -31,17 +44,17 @@ int remove_stopwords(struct word *tokens[]){
 
     int i = 0;
     while (i < rear) {
-        make_lower(tokens[i]->data);
+        make_lower(tokens[i].data);
 
         int found=0;
         for (int j=0;j<count;j++){
-            if(strcmp(tokens[i]->data,stopwords[j])==0){
-                free(tokens[i]);
+            if(strcmp(tokens[i].data,stopwords[j])==0){
+                if (keep_negations && is_negation(tokens[i].data))
+                    break;
                 for(int k=i;k<rear-1;k++){
                     tokens[k]=tokens[k+1];
                 }
                 rear--;
-                tokens[rear]=NULL;
                 found=1;
                 break;
             }
