@@ -1,263 +1,274 @@
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <math.h>
-#include "project.h" 
-static int is_word_character(char ch);
-static int is_word_equal(const char word1[], const char word2[]);
-static int process_file(const char *filename,
-                        const char *target_word,
-                        int *target_count,
-                        int *total_count);
-static int calculate_document_frequency(
-    const char *filenames[],
-    int document_count,
-    const char *target_word,
-    int *document_frequency);
-static double calculate_tf(int target_count, int total_count);
-static double calculate_idf(int document_count, int document_frequency);
-int is_word_character(char ch)
+#include "project.h"
+
+
+static char *read_file(const char *filename)
 {
-    return isalnum((unsigned char)ch);
-}
-static int is_word_equal(const char word1[], const char word2[])
-{
-    char temp1[1000];
-    char temp2[1000];
-    int i = 0;
+    FILE *fp;
+    char *text;
 
-    if (word1 == NULL || word2 == NULL)
+    long file_size;
+    size_t bytes_read;
+
+    fp = fopen(filename, "rb");
+
+    if(fp == NULL)
     {
-        return 0;
+        printf("Cannot open file: %s\n", filename);
+        return NULL;
     }
 
-    while (word1[i] != '\0' && i < 999)
-    {
-        temp1[i] = word1[i];
-        i++;
-    }
-    temp1[i] = '\0';
+    fseek(fp, 0, SEEK_END);
 
-    if (word1[i] != '\0')
+    file_size = ftell(fp);
+
+    if(file_size < 0)
     {
-        return 0;
+        fclose(fp);
+        return NULL;
     }
 
-    i = 0;
+    rewind(fp);
 
-    while (word2[i] != '\0' && i < 999)
-    {
-        temp2[i] = word2[i];
-        i++;
-    }
-    temp2[i] = '\0';
+    text = (char *)malloc((file_size + 1) * sizeof(char));
 
-    if (word2[i] != '\0')
+    if(text == NULL)
     {
-        return 0;
+        fclose(fp);
+        return NULL;
     }
 
-    make_lower(temp1);
-    make_lower(temp2);
+    bytes_read = fread(text, sizeof(char), file_size, fp);
 
-    return strcmp(temp1, temp2) == 0;
+    if(ferror(fp))
+    {
+        free(text);
+        fclose(fp);
+        return NULL;
+    }
+
+    text[bytes_read] = '\0';
+
+    fclose(fp);
+
+    return text;
 }
 
-int process_file(const char *filename,
-                 const char *target_word,
-                 int *target_count,
-                 int *total_count)
-{
-    FILE *file;
-    char word[1000];
-    char ch;
-    int word_length = 0;
-    int too_long = 0;
 
-    if (filename == NULL || target_word == NULL ||
-        target_count == NULL || total_count == NULL)
-    {
-        return 0;
-    }
-
-    *target_count = 0;
-    *total_count = 0;
-
-    if (target_word[0] == '\0')
-    {
-        return 0;
-    }
-
-    file = fopen(filename, "r");
-
-    if (file == NULL)
-    {
-        return 0;
-    }
-
-    while ((ch = (char)fgetc(file)) != EOF)
-    {
-        if (is_word_character(ch))
-        {
-            if (word_length < 999)
-            {
-                word[word_length] = ch;
-                word_length++;
-            }
-            else
-            {
-                too_long = 1;
-            }
-        }
-        else if (word_length > 0 || too_long)
-        {
-            if (!too_long)
-            {
-                word[word_length] = '\0';
-
-                if (is_word_equal(word, target_word))
-                {
-                    (*target_count)++;
-                }
-            }
-
-            (*total_count)++;
-
-            word_length = 0;
-            too_long = 0;
-        }
-    }
-
-    if (word_length > 0 || too_long)
-    {
-        if (!too_long)
-        {
-            word[word_length] = '\0';
-
-            if (is_word_equal(word, target_word))
-            {
-                (*target_count)++;
-            }
-        }
-
-        (*total_count)++;
-    }
-
-    if (ferror(file))
-    {
-        fclose(file);
-        return 0;
-    }
-
-    fclose(file);
-    return 1;
-}
-
-int calculate_document_frequency(const char *filenames[],
-                                 int document_count,
-                                 const char *target_word,
-                                 int *document_frequency)
+static void free_tokens(struct word **tokens, int count)
 {
     int i;
-    int target_count;
-    int total_count;
 
-    if (filenames == NULL || target_word == NULL ||
-        document_frequency == NULL || document_count <= 0 ||
-        target_word[0] == '\0')
+    for(i = 0; i < count; i++)
     {
-        return 0;
+        free(tokens[i]);
+        tokens[i] = NULL;
     }
 
-    *document_frequency = 0;
-
-    for (i = 0; i < document_count; i++)
-    {
-        if (filenames[i] == NULL)
-        {
-            return 0;
-        }
-
-        if (!process_file(filenames[i], target_word,
-                          &target_count, &total_count))
-        {
-            return 0;
-        }
-
-        if (target_count > 0)
-        {
-            (*document_frequency)++;
-        }
-    }
-
-    return 1;
+    rear = 0;
 }
 
-double calculate_tf(int target_count, int total_count)
+
+static double calculate_tf(
+    const char *filename,
+    const char *target_word)
 {
-    if (target_count < 0 || total_count <= 0 ||
-        target_count > total_count)
+    char *text;
+    struct word **tokens;
+
+    int word_count = 0;
+    int token_count;
+    int i;
+
+    double tf = 0.0;
+
+    text = read_file(filename);
+
+    if(text == NULL)
     {
-        return 0.0;
+        return -1.0;
     }
 
-    return (double)target_count / total_count;
-}
+    text_normalization(text, DEFAULT_OPTIONS);
+    make_lower(text);
 
-double calculate_idf(int document_count, int document_frequency)
-{
-    if (document_count <= 0 || document_frequency <= 0 ||
-        document_frequency > document_count)
+    rear = 0;
+
+    tokens = word_tokenize(text);
+
+    token_count = rear;
+
+    free(text);
+
+    if(tokens == NULL)
     {
-        return 0.0;
+        return -1.0;
     }
 
-    return log((double)document_count / document_frequency);
+    for(i = 0; i < token_count; i++)
+    {
+        if(strcmp(tokens[i]->data, target_word) == 0)
+        {
+            word_count++;
+        }
+    }
+
+    if(token_count > 0)
+    {
+        tf = (double)word_count / token_count;
+    }
+
+    free_tokens(tokens, token_count);
+
+    return tf;
 }
 
-int calculate_tfidf(const char *filename,
-                    const char *target_word,
-                    const char *filenames[],
-                    int document_count,
-                    double *score)
+
+static int calculate_df(
+    const char *target_word,
+    const char *filenames[],
+    int document_count)
 {
-    int target_count;
-    int total_count;
-    int document_frequency;
+    int df = 0;
+    int found;
+
+    int i;
+    int j;
+    int token_count;
+
+    for(i = 0; i < document_count; i++)
+    {
+        char *text;
+        struct word **tokens;
+
+        if(filenames[i] == NULL)
+        {
+            return -1;
+        }
+
+        text = read_file(filenames[i]);
+
+        if(text == NULL)
+        {
+            return -1;
+        }
+
+        text_normalization(text, DEFAULT_OPTIONS);
+        make_lower(text);
+
+        rear = 0;
+
+        tokens = word_tokenize(text);
+
+        token_count = rear;
+
+        free(text);
+
+        if(tokens == NULL)
+        {
+            return -1;
+        }
+
+        found = 0;
+
+        for(j = 0; j < token_count; j++)
+        {
+            if(strcmp(tokens[j]->data, target_word) == 0)
+            {
+                found = 1;
+                break;
+            }
+        }
+
+        if(found == 1)
+        {
+            df++;
+        }
+
+        free_tokens(tokens, token_count);
+    }
+
+    return df;
+}
+
+
+int calculate_tfidf(
+    const char *filename,
+    const char *target_word,
+    const char *filenames[],
+    int document_count,
+    double *score)
+{
     double tf;
     double idf;
 
-    if (score == NULL)
+    int df;
+
+    char *word;
+    size_t word_length;
+
+    if(filename == NULL ||
+       target_word == NULL ||
+       filenames == NULL ||
+       score == NULL ||
+       document_count <= 0 ||
+       target_word[0] == '\0')
     {
         return 0;
     }
 
     *score = 0.0;
 
-    if (filename == NULL || target_word == NULL ||
-        filenames == NULL || document_count <= 0 ||
-        target_word[0] == '\0')
+    word_length = strlen(target_word);
+
+    word = (char *)malloc((word_length + 1) * sizeof(char));
+
+    if(word == NULL)
     {
         return 0;
     }
 
-    if (!process_file(filename, target_word,
-                      &target_count, &total_count))
+    strcpy(word, target_word);
+
+    text_normalization(word, DEFAULT_OPTIONS);
+    make_lower(word);
+
+    tf = calculate_tf(filename, word);
+
+    if(tf < 0.0)
     {
+        free(word);
         return 0;
     }
 
-    if (!calculate_document_frequency(filenames, document_count,
-                                      target_word,
-                                      &document_frequency))
+    df = calculate_df(
+        word,
+        filenames,
+        document_count
+    );
+
+    if(df < 0)
     {
+        free(word);
         return 0;
     }
 
-    tf = calculate_tf(target_count, total_count);
-    idf = calculate_idf(document_count, document_frequency);
+    if(df == 0)
+    {
+        idf = 0.0;
+    }
+    else
+    {
+        idf = log((double)document_count / df);
+    }
 
     *score = tf * idf;
+
+    free(word);
 
     return 1;
 }

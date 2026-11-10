@@ -38,21 +38,16 @@ void text_normalization(char *text, Option opt)
             continue;
         }
 
-        /* Remove digits if enabled */
         if (digit_removal && isdigit((unsigned char)ch))
         {
             i++;
             continue;
         }
-
-        /* Remove punctuation if enabled */
         if (punctuation_removal && ispunct((unsigned char)ch))
         {
             i++;
             continue;
         }
-
-        /* Remove non-printable characters if enabled */
         if (special_character_removal &&
             !isprint((unsigned char)ch))
         {
@@ -66,8 +61,6 @@ void text_normalization(char *text, Option opt)
 
         i++;
     }
-
-    /* Remove trailing space */
     if (j > 0 && text[j - 1] == ' ')
     {
         j--;

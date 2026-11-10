@@ -1,0 +1,5 @@
+
+Natural language processing helps computers       understand human language.
+Computers process words, sen55tences, and documents!
+Processing text requires cleaning wo@rds, removing common words, and counting word frequencies.
+The systems analyze language, generate word sequences., and reduce words to their root forms eh!
