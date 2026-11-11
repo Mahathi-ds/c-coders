@@ -4,351 +4,324 @@
 #include <string.h>
 #include "project.h"
 
-#define LARGE_DATASET_SIZE 100
+#define NUM_TRAIN 32
+#define NUM_TEST 8
 
-/* Helper function to release predictions */
-void free_predictions(char **predictions, int count)
+// Read the complete contents of a text file
+char *read_file(const char *filename)
 {
-    if (predictions == NULL)
+    FILE *fp = fopen(filename, "rb");
+
+    if (fp == NULL) {
+        perror(filename);
+        return NULL;
+    }
+
+    if (fseek(fp, 0, SEEK_END) != 0) {
+        fclose(fp);
+        return NULL;
+    }
+
+    long size = ftell(fp);
+
+    if (size < 0) {
+        fclose(fp);
+        return NULL;
+    }
+
+    rewind(fp);
+
+    char *text = malloc((size_t)size + 1);
+
+    if (text == NULL) {
+        fclose(fp);
+        return NULL;
+    }
+
+    size_t bytes_read = fread(text, 1, (size_t)size, fp);
+
+    if (bytes_read != (size_t)size || ferror(fp)) {
+        free(text);
+        fclose(fp);
+        return NULL;
+    }
+
+    text[bytes_read] = '\0';
+
+    fclose(fp);
+
+    return text;
+}
+
+
+// Free an array of dynamically allocated strings
+void free_documents(char **docs, int count)
+{
+    if (docs == NULL)
         return;
 
     for (int i = 0; i < count; i++)
+        free(docs[i]);
+
+    free(docs);
+}
+
+
+int main()
+{
+    // =========================================
+    // 1. TRAINING FILE PATHS
+    // =========================================
+
+    const char *train_paths[NUM_TRAIN] = {
+
+        // Sports
+        "data/corpus/train/sports/doc1.txt",
+        "data/corpus/train/sports/doc2.txt",
+        "data/corpus/train/sports/doc3.txt",
+        "data/corpus/train/sports/doc4.txt",
+        "data/corpus/train/sports/doc5.txt",
+        "data/corpus/train/sports/doc6.txt",
+        "data/corpus/train/sports/doc7.txt",
+        "data/corpus/train/sports/doc8.txt",
+
+
+
+        // Technology
+        "data/corpus/train/technology/doc1.txt",
+        "data/corpus/train/technology/doc2.txt",
+        "data/corpus/train/technology/doc3.txt",
+        "data/corpus/train/technology/doc4.txt",
+        "data/corpus/train/technology/doc5.txt",
+        "data/corpus/train/technology/doc6.txt",
+         "data/corpus/train/technology/doc7.txt",
+        "data/corpus/train/technology/doc8.txt",
+
+        // Health
+        "data/corpus/train/health/doc1.txt",
+        "data/corpus/train/health/doc2.txt",
+        "data/corpus/train/health/doc3.txt",
+        "data/corpus/train/health/doc4.txt",
+        "data/corpus/train/health/doc5.txt",
+        "data/corpus/train/health/doc6.txt",
+         "data/corpus/train/health/doc7.txt",
+        "data/corpus/train/health/doc8.txt",
+        
+
+        // Politics
+        "data/corpus/train/politics/doc1.txt",
+        "data/corpus/train/politics/doc2.txt",
+        "data/corpus/train/politics/doc3.txt",
+        "data/corpus/train/politics/doc4.txt",
+        "data/corpus/train/politics/doc5.txt",
+        "data/corpus/train/politics/doc6.txt",
+         "data/corpus/train/politics/doc7.txt",
+        "data/corpus/train/politics/doc8.txt"
+        
+    };
+
+
+    // Corresponding labels
+    char *labels[NUM_TRAIN] = {
+
+        "Sports", "Sports", "Sports",
+        "Sports", "Sports", "Sports","SSports","Sports",
+
+        "Technology", "Technology", "Technology",
+        "Technology", "Technology", "Technology","Technology","Technology",
+
+        "Health", "Health", "Health",
+        "Health", "Health", "Health","Health","Health",
+
+        "Politics", "Politics", "Politics",
+        "Politics", "Politics", "Politics","Politics","Politics"
+    };
+
+
+    // =========================================
+    // 2. LOAD TRAINING DOCUMENTS
+    // =========================================
+
+    char **docs = calloc(NUM_TRAIN, sizeof(char *));
+
+    if (docs == NULL) {
+        printf("Memory allocation failed.\n");
+        return 1;
+    }
+
+    int loaded = 0;
+
+    for (int i = 0; i < NUM_TRAIN; i++) {
+
+        docs[i] = read_file(train_paths[i]);
+
+        if (docs[i] == NULL) {
+            printf("Could not load training document: %s\n",
+                   train_paths[i]);
+
+            free_documents(docs, loaded);
+            return 1;
+        }
+
+        loaded++;
+    }
+
+    printf("Loaded %d training documents.\n\n", loaded);
+
+
+    // =========================================
+    // 3. TRAIN NAIVE BAYES MODEL
+    // =========================================
+
+    NaiveBayesModel model =
+        Naivebayes_fit(docs, labels, NUM_TRAIN);
+
+    printf("Training completed.\n\n");
+
+
+    // =========================================
+    // 4. TEST FILE PATHS
+    // =========================================
+
+    const char *test_paths[NUM_TEST] = {
+
+        "data/corpus/test/test1.txt",
+        "data/corpus/test/test2.txt",
+        "data/corpus/test/test3.txt",
+        "data/corpus/test/test4.txt",
+        "data/corpus/test/test5.txt",
+        "data/corpus/test/test6.txt",
+        "data/corpus/test/test7.txt",
+        "data/corpus/test/test8.txt"
+    };
+
+
+    // Expected labels are used ONLY for evaluation.
+    // They are NOT passed to Naivebayes_predict().
+
+    char *expected_labels[NUM_TEST] = {
+        "Sports",
+        "Sports",
+        "Technology",
+        "Technology",
+        "Health",
+        "Health",
+        "Politics",
+        "Politics"
+    };
+
+
+    // =========================================
+    // 5. LOAD TEST DOCUMENTS
+    // =========================================
+
+    char **test_docs = calloc(NUM_TEST, sizeof(char *));
+
+    if (test_docs == NULL) {
+        printf("Memory allocation failed.\n");
+
+        NaiveBayes_free(&model);
+        free_documents(docs, NUM_TRAIN);
+        return 1;
+    }
+
+    loaded = 0;
+
+    for (int i = 0; i < NUM_TEST; i++) {
+
+        test_docs[i] = read_file(test_paths[i]);
+
+        if (test_docs[i] == NULL) {
+            printf("Could not load test document: %s\n",
+                   test_paths[i]);
+
+            free_documents(test_docs, loaded);
+            NaiveBayes_free(&model);
+            free_documents(docs, NUM_TRAIN);
+            return 1;
+        }
+
+        loaded++;
+    }
+
+    printf("Loaded %d test documents.\n\n", loaded);
+
+
+    // =========================================
+    // 6. PREDICT
+    // =========================================
+
+    char **predictions =
+        Naivebayes_predict(model, test_docs, NUM_TEST);
+
+
+    if (predictions == NULL) {
+        printf("Prediction failed.\n");
+
+        free_documents(test_docs, NUM_TEST);
+        NaiveBayes_free(&model);
+        free_documents(docs, NUM_TRAIN);
+        return 1;
+    }
+
+
+    // =========================================
+    // 7. DISPLAY RESULTS AND CALCULATE ACCURACY
+    // =========================================
+
+    int correct = 0;
+
+    for (int i = 0; i < NUM_TEST; i++) {
+
+        printf("Test document %d\n", i + 1);
+
+        printf("Expected class : %s\n",
+               expected_labels[i]);
+
+        printf("Predicted class: %s\n",
+               predictions[i] ? predictions[i] : "NULL");
+
+        if (predictions[i] != NULL &&
+            strcmp(predictions[i], expected_labels[i]) == 0) {
+
+            printf("Result         : PASS\n");
+            correct++;
+        }
+        else {
+            printf("Result         : FAIL\n");
+        }
+
+        printf("\n");
+    }
+
+
+    printf("=================================\n");
+    printf("Correct predictions: %d/%d\n", correct, NUM_TEST);
+
+    printf("Accuracy: %.2f%%\n",
+           (correct * 100.0) / NUM_TEST);
+
+
+    // =========================================
+    // 8. MEMORY CLEANUP
+    // =========================================
+
+    // Free each predicted label and prediction array
+    for (int i = 0; i < NUM_TEST; i++)
         free(predictions[i]);
 
     free(predictions);
-}
 
-/* Helper function to display predictions */
-void display_predictions(char **predictions, int count)
-{
-    if (predictions == NULL)
-    {
-        printf("Prediction failed.\n");
-        return;
-    }
+    // Free test documents
+    free_documents(test_docs, NUM_TEST);
 
-    for (int i = 0; i < count; i++)
-        printf("Document %d: %s\n", i + 1, predictions[i]);
-}
-
-
-int main(void)
-{
-    NaiveBayesModel model = {0};
-    char **predictions = NULL;
-
-    /* ==========================================
-       TEST 1: NORMAL CASE
-       ========================================== */
-
-    printf("\n====================================\n");
-    printf("TEST 1: NORMAL CASE\n");
-    printf("====================================\n");
-
-    char *normal_docs[] = {
-        "excellent acting wonderful story",
-        "great movie loved it",
-        "amazing film enjoyable experience",
-        "boring plot terrible acting",
-        "bad movie hated it",
-        "awful film dull experience"
-    };
-
-    char *normal_labels[] = {
-        "positive",
-        "positive",
-        "positive",
-        "negative",
-        "negative",
-        "negative"
-    };
-
-    char *normal_test[] = {
-        "wonderful movie excellent acting",
-        "terrible boring film",
-        "great enjoyable experience",
-        "bad dull movie"
-    };
-
-    model = Naivebayes_fit(normal_docs, normal_labels, 6);
-
-    if (model.vocab.words == NULL)
-    {
-        printf("Training failed.\n");
-    }
-    else
-    {
-        printf("Training successful.\n");
-
-        predictions = Naivebayes_predict(model, normal_test, 4);
-
-        display_predictions(predictions, 4);
-
-        free_predictions(predictions, 4);
-        NaiveBayes_free(&model);
-    }
-
-
-    /* ==========================================
-       TEST 2: BOUNDARY CASES
-       One document and one class
-       ========================================== */
-
-    printf("\n====================================\n");
-    printf("TEST 2: BOUNDARY CASES\n");
-    printf("====================================\n");
-
-    char *boundary_docs[] = {
-        "excellent wonderful amazing"
-    };
-
-    char *boundary_labels[] = {
-        "positive"
-    };
-
-    char *boundary_test[] = {
-        "excellent",
-        "unknown vocabulary words"
-    };
-
-    model = Naivebayes_fit(boundary_docs, boundary_labels, 1);
-
-    if (model.vocab.words == NULL)
-    {
-        printf("Boundary training failed.\n");
-    }
-    else
-    {
-        printf("Single-document training successful.\n");
-
-        predictions = Naivebayes_predict(model, boundary_test, 2);
-
-        display_predictions(predictions, 2);
-
-        free_predictions(predictions, 2);
-        NaiveBayes_free(&model);
-    }
-
-
-    /* ==========================================
-       TEST 3: INVALID INPUT
-       ========================================== */
-
-    printf("\n====================================\n");
-    printf("TEST 3: INVALID INPUT\n");
-    printf("====================================\n");
-
-    model = Naivebayes_fit(NULL, normal_labels, 6);
-
-    if (model.vocab.words == NULL)
-        printf("NULL documents handled correctly.\n");
-
+    // Free trained model
     NaiveBayes_free(&model);
 
-    model = Naivebayes_fit(normal_docs, NULL, 6);
+    // Free training documents
+    free_documents(docs, NUM_TRAIN);
 
-    if (model.vocab.words == NULL)
-        printf("NULL labels handled correctly.\n");
-
-    NaiveBayes_free(&model);
-
-    model = Naivebayes_fit(normal_docs, normal_labels, 0);
-
-    if (model.vocab.words == NULL)
-        printf("Zero document count handled correctly.\n");
-
-    NaiveBayes_free(&model);
-
-
-    /* ==========================================
-       TEST 4: EMPTY INPUT
-       Empty document and empty prediction
-       ========================================== */
-
-    printf("\n====================================\n");
-    printf("TEST 4: EMPTY INPUT\n");
-    printf("====================================\n");
-
-    char *empty_docs[] = {
-        "",
-        "excellent movie",
-        "terrible movie"
-    };
-
-    char *empty_labels[] = {
-        "neutral",
-        "positive",
-        "negative"
-    };
-
-    char *empty_test[] = {
-        "",
-        "excellent",
-        "terrible"
-    };
-
-    model = Naivebayes_fit(empty_docs, empty_labels, 3);
-
-    if (model.vocab.words == NULL)
-    {
-        printf("Training with an empty document failed.\n");
-    }
-    else
-    {
-        printf("Training with an empty document successful.\n");
-
-        predictions = Naivebayes_predict(model, empty_test, 3);
-
-        display_predictions(predictions, 3);
-
-        free_predictions(predictions, 3);
-        NaiveBayes_free(&model);
-    }
-
-
-    /* ==========================================
-       TEST 5: LARGE INPUT
-       ========================================== */
-
-    printf("\n====================================\n");
-    printf("TEST 5: LARGE INPUT\n");
-    printf("====================================\n");
-
-    char large_docs[LARGE_DATASET_SIZE][256];
-    char large_labels[LARGE_DATASET_SIZE][20];
-
-    char *large_doc_ptrs[LARGE_DATASET_SIZE];
-    char *large_label_ptrs[LARGE_DATASET_SIZE];
-
-    for (int i = 0; i < LARGE_DATASET_SIZE; i++)
-    {
-        if (i % 2 == 0)
-        {
-            snprintf(large_docs[i], sizeof(large_docs[i]),
-                     "excellent wonderful amazing positive movie %d", i);
-
-            strcpy(large_labels[i], "positive");
-        }
-        else
-        {
-            snprintf(large_docs[i], sizeof(large_docs[i]),
-                     "terrible awful boring negative movie %d", i);
-
-            strcpy(large_labels[i], "negative");
-        }
-
-        large_doc_ptrs[i] = large_docs[i];
-        large_label_ptrs[i] = large_labels[i];
-    }
-
-    model = Naivebayes_fit(
-        large_doc_ptrs,
-        large_label_ptrs,
-        LARGE_DATASET_SIZE
-    );
-
-    if (model.vocab.words == NULL)
-    {
-        printf("Large dataset training failed.\n");
-    }
-    else
-    {
-        printf("Successfully trained on %d documents.\n",
-               LARGE_DATASET_SIZE);
-
-        predictions = Naivebayes_predict(
-            model,
-            normal_test,
-            4
-        );
-
-        display_predictions(predictions, 4);
-
-        free_predictions(predictions, 4);
-        NaiveBayes_free(&model);
-    }
-
-
-    /* ==========================================
-       TEST 6: FAILURE CONDITIONS
-       ========================================== */
-
-    printf("\n====================================\n");
-    printf("TEST 6: FAILURE CONDITIONS\n");
-    printf("====================================\n");
-
-    NaiveBayesModel empty_model = {0};
-
-    predictions = Naivebayes_predict(
-        empty_model,
-        normal_test,
-        4
-    );
-
-    if (predictions == NULL)
-        printf("Prediction with an untrained model handled correctly.\n");
-
-    predictions = Naivebayes_predict(
-        empty_model,
-        NULL,
-        4
-    );
-
-    if (predictions == NULL)
-        printf("NULL test documents handled correctly.\n");
-
-    predictions = Naivebayes_predict(
-        empty_model,
-        normal_test,
-        0
-    );
-
-    if (predictions == NULL)
-        printf("Zero prediction count handled correctly.\n");
-
-
-    /* ==========================================
-       TEST 7: MEMORY MANAGEMENT
-       Repeated training and prediction
-       ========================================== */
-
-    printf("\n====================================\n");
-    printf("TEST 7: MEMORY MANAGEMENT\n");
-    printf("====================================\n");
-
-    int repetitions = 20;
-
-    for (int i = 0; i < repetitions; i++)
-    {
-        model = Naivebayes_fit(
-            normal_docs,
-            normal_labels,
-            6
-        );
-
-        if (model.vocab.words == NULL)
-        {
-            printf("Training failed at iteration %d.\n", i + 1);
-            continue;
-        }
-
-        predictions = Naivebayes_predict(
-            model,
-            normal_test,
-            4
-        );
-
-        free_predictions(predictions, 4);
-
-        NaiveBayes_free(&model);
-    }
-
-    printf("Completed %d training-prediction-cleanup cycles.\n",
-           repetitions);
-
-    printf("\n====================================\n");
-    printf("ALL TESTS COMPLETED\n");
-    printf("====================================\n");
+    printf("\nMemory cleanup completed.\n");
 
     return 0;
 }

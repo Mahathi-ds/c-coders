@@ -1,0 +1,9 @@
+filename,expected_label
+test1.txt,Sports
+test2.txt,Sports
+test3.txt,Technology
+test4.txt,Technology
+test5.txt,Health
+test6.txt,Health
+test7.txt,Politics
+test8.txt,Politics

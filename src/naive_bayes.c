@@ -229,7 +229,7 @@ wordclasscounts *build_word_class_counts(VectorizerResult result,DocumentGroups 
         arr[i].word = malloc(strlen(word) + 1);
         if (arr[i].word == NULL)
             return NULL;
-        arr[i].classes = malloc(grps.num_classes*sizeof());
+        arr[i].classes = malloc(grps.num_classes*sizeof(classcount));
         arr[i].size=grps.num_classes;
         if (arr[i].classes == NULL)
             return NULL;
