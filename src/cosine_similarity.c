@@ -6,6 +6,8 @@
 #include "project.h"
 
 
+/* Initialize a frequency list */
+
 static void initialize_list(FreqList *list)
 {
     list->frequencies = NULL;
@@ -14,11 +16,13 @@ static void initialize_list(FreqList *list)
 }
 
 
+/* Free a frequency list */
+
 static void free_list(FreqList *list)
 {
-    size_t i;
+    int i;
 
-    for(i = 0; i < list->count; i++)
+    for (i = 0; i < list->count; i++)
     {
         free(list->frequencies[i].word);
     }
@@ -31,21 +35,25 @@ static void free_list(FreqList *list)
 }
 
 
+/* Find a word in a frequency list */
+
 static int find_word(FreqList *list, const char *word)
 {
-    size_t i;
+    int i;
 
-    for(i = 0; i < list->count; i++)
+    for (i = 0; i < list->count; i++)
     {
-        if(strcmp(list->frequencies[i].word, word) == 0)
+        if (strcmp(list->frequencies[i].word, word) == 0)
         {
-            return (int)i;
+            return i;
         }
     }
 
     return -1;
 }
 
+
+/* Add a word to the frequency list */
 
 static int add_word(FreqList *list, const char *word)
 {
@@ -57,15 +65,15 @@ static int add_word(FreqList *list, const char *word)
 
     position = find_word(list, word);
 
-    if(position != -1)
+    if (position != -1)
     {
         list->frequencies[position].count++;
         return 1;
     }
 
-    if(list->count == list->capacity)
+    if (list->count == list->capacity)
     {
-        if(list->capacity == 0)
+        if (list->capacity == 0)
         {
             new_capacity = 10;
         }
@@ -79,7 +87,7 @@ static int add_word(FreqList *list, const char *word)
             new_capacity * sizeof(WordFreq)
         );
 
-        if(temp == NULL)
+        if (temp == NULL)
         {
             return 0;
         }
@@ -90,7 +98,7 @@ static int add_word(FreqList *list, const char *word)
 
     new_word = malloc(strlen(word) + 1);
 
-    if(new_word == NULL)
+    if (new_word == NULL)
     {
         return 0;
     }
@@ -106,38 +114,26 @@ static int add_word(FreqList *list, const char *word)
 }
 
 
-static void free_token_stack(struct word **tokens, int count)
-{
-    int i;
-
-    for(i = 0; i < count; i++)
-    {
-        free(tokens[i]);
-        tokens[i] = NULL;
-    }
-
-    rear = 0;
-}
-
+/* Calculate word frequencies from a document */
 
 static int calculate_word_frequencies(
     const char *filename,
     FreqList *list)
 {
     FILE *fp;
-    char *text;
 
+    char *text;
     long file_size;
     size_t bytes_read;
 
-    struct word **tokens;
+    struct word *tokens;
 
     int token_count;
     int i;
 
     fp = fopen(filename, "rb");
 
-    if(fp == NULL)
+    if (fp == NULL)
     {
         printf("Cannot open file: %s\n", filename);
         return 0;
@@ -147,7 +143,7 @@ static int calculate_word_frequencies(
 
     file_size = ftell(fp);
 
-    if(file_size < 0)
+    if (file_size < 0)
     {
         fclose(fp);
         return 0;
@@ -155,17 +151,17 @@ static int calculate_word_frequencies(
 
     rewind(fp);
 
-    text = malloc((file_size + 1) * sizeof(char));
+    text = malloc((size_t)file_size + 1);
 
-    if(text == NULL)
+    if (text == NULL)
     {
         fclose(fp);
         return 0;
     }
 
-    bytes_read = fread(text, sizeof(char), file_size, fp);
+    bytes_read = fread(text, 1, (size_t)file_size, fp);
 
-    if(ferror(fp))
+    if (ferror(fp))
     {
         free(text);
         fclose(fp);
@@ -187,25 +183,29 @@ static int calculate_word_frequencies(
 
     free(text);
 
-    if(tokens == NULL)
+    if (tokens == NULL)
     {
         return 0;
     }
 
-    for(i = 0; i < token_count; i++)
+    /*
+       The tokenizer returns a static array.
+       Therefore, do not free tokens or tokens[i].
+    */
+
+    for (i = 0; i < token_count; i++)
     {
-        if(!add_word(list, tokens[i]->data))
+        if (!add_word(list, tokens[i].data))
         {
-            free_token_stack(tokens, token_count);
             return 0;
         }
     }
 
-    free_token_stack(tokens, token_count);
-
     return 1;
 }
 
+
+/* Calculate cosine similarity between two documents */
 
 int calculate_cosine_similarity(
     const char *file1,
@@ -215,14 +215,16 @@ int calculate_cosine_similarity(
     FreqList list1;
     FreqList list2;
 
-    size_t i;
+    int i;
     int position;
 
     double dot_product = 0.0;
     double magnitude1 = 0.0;
     double magnitude2 = 0.0;
 
-    if(file1 == NULL || file2 == NULL || similarity == NULL)
+    if (file1 == NULL ||
+        file2 == NULL ||
+        similarity == NULL)
     {
         return 0;
     }
@@ -232,29 +234,30 @@ int calculate_cosine_similarity(
     initialize_list(&list1);
     initialize_list(&list2);
 
-    if(!calculate_word_frequencies(file1, &list1))
+    if (!calculate_word_frequencies(file1, &list1))
     {
         free_list(&list1);
         free_list(&list2);
         return 0;
     }
 
-    if(!calculate_word_frequencies(file2, &list2))
+    if (!calculate_word_frequencies(file2, &list2))
     {
         free_list(&list1);
         free_list(&list2);
         return 0;
     }
 
+    /* Calculate dot product */
 
-    for(i = 0; i < list1.count; i++)
+    for (i = 0; i < list1.count; i++)
     {
         position = find_word(
             &list2,
             list1.frequencies[i].word
         );
 
-        if(position != -1)
+        if (position != -1)
         {
             dot_product +=
                 (double)list1.frequencies[i].count *
@@ -262,8 +265,9 @@ int calculate_cosine_similarity(
         }
     }
 
+    /* Calculate magnitude of document 1 */
 
-    for(i = 0; i < list1.count; i++)
+    for (i = 0; i < list1.count; i++)
     {
         magnitude1 +=
             (double)list1.frequencies[i].count *
@@ -272,8 +276,9 @@ int calculate_cosine_similarity(
 
     magnitude1 = sqrt(magnitude1);
 
+    /* Calculate magnitude of document 2 */
 
-    for(i = 0; i < list2.count; i++)
+    for (i = 0; i < list2.count; i++)
     {
         magnitude2 +=
             (double)list2.frequencies[i].count *
@@ -282,8 +287,9 @@ int calculate_cosine_similarity(
 
     magnitude2 = sqrt(magnitude2);
 
+    /* Calculate cosine similarity */
 
-    if(magnitude1 != 0.0 && magnitude2 != 0.0)
+    if (magnitude1 != 0.0 && magnitude2 != 0.0)
     {
         *similarity =
             dot_product / (magnitude1 * magnitude2);

@@ -6,19 +6,19 @@
 
 
 
-struct word *stack[1000];  /*array of structs word*/
+struct word stack[1000];  
 int rear=0;
 
-struct word *create(){
-    struct word *new=malloc(sizeof(struct word));
-    if(new==NULL){
-        printf("Memory not allocated");
-    }
-    new->idx=0;
+struct word create(){
+    struct word new;
+    // if(new==NULL){
+    //     printf("Memory not allocated");
+    // }
+    new.idx=0;
     return new;
 }
 
-struct word **word_tokenize(char text[]){
+struct word *word_tokenize(char text[]){
     if(text==NULL){
         printf("Empty text");
         return NULL;
@@ -28,30 +28,30 @@ struct word **word_tokenize(char text[]){
     while(i<strlen(text)){
         
         int j=i;
-        if(isspace(text[j]==0)){
+        if(isspace(text[j])){
             i++;
             continue;
             
         }
-        struct word *new=create();
-        while(text[j]!=' '  && text[j]!='\0' && !ispunct(text[j]) && !isdigit(text[j]) ){
+        struct word new=create();
+        while(text[j]!='\0' && !isspace(text[j]) && !ispunct(text[j]) && !isdigit(text[j])){
                     
-            new->data[new->idx]=text[j];
-            new->idx++;
+            new.data[new.idx]=text[j];
+            new.idx++;
             j++;
 
         }
-        if(new->idx>0){
-        new->data[new->idx]='\0';
+        if(new.idx>0){
+        new.data[new.idx]='\0';
         stack[rear]=new;
         rear++;}
         if(ispunct(text[j]) || isdigit(text[j])){
     
 
-            struct word *token=create();
-            token->data[token->idx]=text[j];
-            token->idx++;
-            token->data[token->idx]='\0';
+            struct word token=create();
+            token.data[token.idx]=text[j];
+            token.idx++;
+            token.data[token.idx]='\0';
             stack[rear]=token;
             rear++;
             

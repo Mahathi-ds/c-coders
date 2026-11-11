@@ -1,4 +1,3 @@
-
 #ifndef PROJECT_H
 #define PROJECT_H
 
@@ -65,6 +64,22 @@ typedef struct
     size_t capacity;
 } FreqList;
 
+/* Used by jaccard_similarity.c (inferred from its usage) */
+typedef struct
+{
+    char **words;
+    int size;
+    int capacity;
+} Vocabulary;
+
+typedef struct
+{
+    Vocabulary vocabulary;
+    int *vector1;
+    int *vector2;
+    int size;
+} VectorizerResult;
+
 extern int rear;
 
 int sentence_split(
@@ -80,8 +95,10 @@ void text_normalization(char *text, Option opt);
 
 int stop_words(char stopwords[][100]);
 int remove_stopwords(struct word **tokens);
-struct word *create(void);
-struct word **word_tokenize(char text[]);
+
+/* These two must match tokenize.c exactly */
+struct word create(void);
+struct word *word_tokenize(char text[]);
 
 int calculate_tfidf(
     const char *filename,
@@ -91,11 +108,35 @@ int calculate_tfidf(
     double *score
 );
 
+/* ---------- Similarity helpers ---------- */
+
+int sim_find_word(FreqList *list, const char *word);
+int sim_build_frequency_list(const char *filename, FreqList *list);
+void sim_free_frequency_list(FreqList *list);
+
+/* ---------- Similarity / distance measures ---------- */
+
 int calculate_cosine_similarity(
     const char *file1,
     const char *file2,
     double *similarity
 );
+
+int calculate_jaccard_similarity_files(const char *file1,
+                                       const char *file2,
+                                       double *similarity);
+int calculate_dice_similarity(const char *file1,
+                              const char *file2,
+                              double *similarity);
+int calculate_overlap_coefficient(const char *file1,
+                                  const char *file2,
+                                  double *similarity);
+int calculate_euclidean_distance(const char *file1,
+                                 const char *file2,
+                                 double *distance);
+int calculate_manhattan_distance(const char *file1,
+                                 const char *file2,
+                                 double *distance);
 
 TokenList *nlp_token_list_create(size_t initial_capacity);
 void nlp_token_list_free(TokenList *list);
@@ -106,5 +147,45 @@ void nlp_stem_word(char *word);
 
 FreqList *nlp_word_frequency(TokenList *tokens);
 TokenList *nlp_generate_ngrams(TokenList *tokens, int n);
+
+/* ---------- GloVe / semantic similarity ---------- */
+
+#define GLOVE_DIM          100
+#define GLOVE_VOCAB_SIZE   400100
+#define HASH_TABLE_SIZE    1000003
+
+typedef struct
+{
+    char *word;
+    float vector[GLOVE_DIM];
+} GloveWord;
+
+typedef struct
+{
+    GloveWord *words;
+    int *hash_table;
+    int word_count;
+} GloveModel;
+
+unsigned long glove_hash(const char *word);
+int glove_insert(GloveModel *model, int index);
+void glove_free(GloveModel *model);
+int glove_load(const char *filename, GloveModel *model);
+
+GloveWord *glove_lookup(GloveModel *model, const char *word);
+float glove_word_similarity(GloveModel *model,
+                            const char *word1,
+                            const char *word2);
+int glove_document_vector(GloveModel *model,
+                          const char *document,
+                          float document_vector[GLOVE_DIM]);
+float glove_document_similarity(GloveModel *model,
+                                const char *document1,
+                                const char *document2);
+
+int calculate_semantic_similarity(const char *file1,
+                                  const char *file2,
+                                  const char *embedding_file,
+                                  double *similarity);
 
 #endif
