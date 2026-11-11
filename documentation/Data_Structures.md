@@ -1,4 +1,3 @@
-
 # Data Structures
 
 This document describes the custom data structures and types used in the NLP library, their fields, purpose, and memory-management requirements.
@@ -26,10 +25,7 @@ struct word {
 - The tokens are stored in the global `stack` array.
 - The global variable `rear` keeps track of the number of tokens generated.
 
-**Memory considerations:**
-- The current implementation uses a statically allocated global array.
-- The returned pointer refers to this global array and must not be freed.
-- A subsequent call to `word_tokenize()` overwrites the previous token data.
+
 
 ### 1.2 `Option`
 
@@ -37,21 +33,24 @@ Used to configure the behaviour of text normalization.
 
 ```c
 typedef struct {
-    int ...;
-    int ...;
-    int ...;
+    int digit_removal;
+    int punctuation_removal;
+    int special_character_removal;
 } Option;
 ```
 
-The structure contains three integer flags that control the normalization options.
+| Field | Type | Description |
+|---|---|---|
+| `digit_removal` | `int` | Set to `1` to remove digits, `0` to keep them. |
+| `punctuation_removal` | `int` | Set to `1` to remove punctuation marks, `0` to keep them. |
+| `special_character_removal` | `int` | Set to `1` to remove non-printable characters, `0` to keep them. |
 
 **Usage:**
 - Passed to `text_normalization()` to specify which types of characters should be removed or processed.
 - Allows the caller to customize normalization without changing the function implementation.
 
-**Memory considerations:**
-- Contains only integer fields.
-- Does not require dynamic memory allocation or explicit deallocation.
+
+
 
 ---
 
@@ -79,10 +78,6 @@ typedef struct {
 - Used as input to functions such as `nlp_generate_ngrams()` and `nlp_word_frequency()`.
 - Also represents the output of n-gram generation.
 
-**Memory considerations:**
-- The token array and its strings may be dynamically allocated.
-- The caller must use the appropriate cleanup procedure to release the list and its contents.
-- Do not assume that every `TokenList` has the same ownership behaviour; check how the particular function creates or returns it.
 
 ### 2.2 `WordFreq`
 
@@ -104,11 +99,6 @@ typedef struct {
 - Represents one unique word and its occurrence count.
 - Used as an element inside `FreqList`.
 
-**Memory considerations:**
-- In `nlp_word_frequency()`, the `word` pointer refers to the original token string.
-- The word is not copied into a separately allocated string.
-- The original token strings must remain valid while the frequency list is being used.
-- Do not free `word` separately through this structure.
 
 ### 2.3 `FreqList`
 
@@ -132,9 +122,7 @@ typedef struct {
 - Returned by `nlp_word_frequency()`.
 - Stores each unique word along with its frequency.
 
-**Memory considerations:**
-- The caller must free the dynamically allocated `frequencies` array and the `FreqList` structure.
-- The strings referenced by `frequencies[i].word` belong to the original input tokens and must not be freed through the frequency list.
+
 
 ---
 
@@ -163,10 +151,6 @@ typedef struct {
 - Each word is assigned a position in the vocabulary.
 - The position of a word determines its corresponding column in the document vectors.
 
-**Memory considerations:**
-- The vocabulary array and its individual strings are dynamically allocated.
-- The appropriate cleanup procedure must release both the array and its owned strings.
-
 ### 3.2 `VectorizerResult`
 
 Stores the vectorized representation of a collection of documents along with the vocabulary.
@@ -191,10 +175,7 @@ typedef struct {
 - Each column corresponds to a word in the vocabulary.
 - Used by algorithms such as Naive Bayes and Jaccard similarity.
 
-**Memory considerations:**
-- The vector matrix and vocabulary may contain dynamically allocated memory.
-- The appropriate cleanup procedure must release every allocated row, the outer matrix, and the vocabulary's owned memory.
-- Do not free the vocabulary separately if it is already being released as part of the complete `VectorizerResult` cleanup.
+
 
 ---
 
@@ -237,26 +218,11 @@ typedef struct {
 | Field | Type | Description |
 |---|---|---|
 | `label` | `char *` | Class label. |
-| `word_counts` | `WordCount *` | Array containing words and their counts for that class. |
+| `word_counts` | `WordFreq *` | Array containing words and their counts for that class. |
 | `size` | `int` | Number of word-count entries. |
 
-### 4.3 `classcount`
 
-Stores the occurrence count of a class.
-
-```c
-typedef struct {
-    char *class;
-    int count;
-} classcount;
-```
-
-| Field | Type | Description |
-|---|---|---|
-| `class` | `char *` | Class label. |
-| `count` | `int` | Number of occurrences associated with the class. |
-
-### 4.4 `wordclasscounts`
+### 4.3 `wordclasscounts`
 
 Stores the class-wise occurrence information for a particular word.
 
@@ -274,7 +240,7 @@ typedef struct {
 | `classes` | `classcount *` | Array containing class labels and their associated counts. |
 | `size` | `int` | Number of class entries. |
 
-### 4.5 `ClassDocuments`
+### 4.4 `ClassDocuments`
 
 Stores the indices of training documents belonging to a particular class.
 
@@ -292,7 +258,7 @@ typedef struct {
 | `doc_indices` | `int *` | Array containing indices of documents belonging to the class. |
 | `count` | `int` | Number of documents in the class. |
 
-### 4.6 `NaiveBayesModel`
+### 4.5 `NaiveBayesModel`
 
 Stores the learned information required to classify new documents.
 
@@ -308,4 +274,3 @@ The model contains the class information, class priors, vocabulary, and word lik
 - Use `NaiveBayes_free(&model)` to release the model's allocated memory.
 - Do not use `free(model)` because the model itself is a structure variable, not a dynamically allocated pointer.
 ---
-

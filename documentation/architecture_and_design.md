@@ -1,4 +1,3 @@
-
 # Architecture and Design
 
 ## 1. Introduction
@@ -20,7 +19,6 @@ project/
 │   └── project.h
 │
 ├── src/
-│   ├── project.c
 │   ├── text_normalisation.c
 │   ├── sentence_split.c
 │   ├── word_tokenize.c
@@ -29,6 +27,12 @@ project/
 │   ├── vectorizer.c
 │   ├── naive_bayes.c
 │   └── jaccard.c
+    
+
+│
+├── data/
+│   └── EN-Stopwords.txt
+    
 │
 ├── examples/
 │   └── demo.c
@@ -47,6 +51,7 @@ project/
 |---|---|
 | `include/` | Contains the public header file declaring the functions and data structures provided by the library. |
 | `src/` | Contains the implementation of the different NLP functionalities. |
+| `data/` | Contains data files used by the library, such as the English stop-word list (`EN-Stopwords.txt`). |
 | `examples/` | Contains demonstration programs showing how to use the library. |
 | `tests/` | Contains test programs used to verify the correctness of individual modules and algorithms. |
 | `documentation/` | Contains detailed project documentation. |
@@ -55,7 +60,7 @@ project/
 
 ## 3. Modular Design
 
-The library is divided into the following functional modules.
+The library is divided into the following functionalalities.
 
 ### 3.1 Text Preprocessing Module
 
@@ -78,10 +83,8 @@ This module converts textual data into structured representations that can be us
 
 Its functionalities include:
 
-- Vocabulary generation from a collection of documents.
 - Word frequency analysis.
 - N-gram generation.
-- Document-term representation.
 - TF-IDF vectorisation.
 
 The vocabulary provides a mapping between words and their corresponding positions in the numerical representation of documents.
@@ -92,8 +95,6 @@ This module contains algorithms that operate on processed text or its numerical 
 
 The algorithms include:
 
-- Cosine similarity.
-- Jaccard similarity.
 - Naive Bayes text classification.
 - Sentiment scoring.
 - Keyword extraction.
@@ -102,48 +103,7 @@ The algorithms include:
 These algorithms enable document comparison, classification, and text analysis.
 
 
-## 4. Overall Processing Pipeline
-
-The library supports a sequence of operations that transforms raw textual input into a representation suitable for analysis.
-
-The general processing flow is:
-
-```mermaid
-flowchart TD
-    A[Raw Text / Text Files] --> B[Text Preprocessing]
-
-    B --> C[Sentence Splitting]
-    B --> D[Case Normalisation]
-    B --> E[Text Normalisation]
-
-    C --> F[Word Tokenisation]
-    D --> F
-    E --> F
-
-    F --> G[Stop-word Removal]
-    G --> H[Stemming]
-
-    H --> I[Text Representation]
-
-    I --> J[Vocabulary]
-    I --> K[Word Frequencies]
-    I --> L[N-grams]
-
-    J --> M[Vectorisation]
-    K --> M
-
-    M --> N[TF-IDF]
-    M --> O[Similarity Measures]
-    M --> P[Naive Bayes Classification]
-
-    N --> Q[Analysis Results]
-    O --> Q
-    P --> Q
-```
-
-The above diagram represents the logical organisation of the available functionalities. The actual execution order depends on the operations selected by the user. Not every operation needs to be executed for every task.
-
-## 5. Data Flow and Module Interaction
+## 4. Data Flow and Module Interaction
 
 The data flows through different modules depending on the operation being performed.
 
@@ -159,29 +119,29 @@ The data flows through different modules depending on the operation being perfor
 
 The common header file, `project.h`, acts as the interface between the library modules and the programs that use them.
 
-## 6. Design Principles
+## 5. Design Principles
 
 The following principles guide the design of the library.
 
-### 6.1 Modularity
+### 5.1 Modularity
 
 Each functionality is implemented independently, making it easier to modify, debug, test, and extend individual modules without affecting unrelated functionalities.
 
-### 6.2 Reusability
+### 5.2 Reusability
 
 Functions are designed to be reusable across different applications. Users can invoke individual functions without having to execute the entire processing pipeline.
 
-### 6.3 Encapsulation
+### 5.3 Encapsulation
 
 Implementation details are maintained in the respective source files, while function declarations and required data structure definitions are exposed through the public header file.
 
-### 6.4 Dynamic Memory Management
+### 5.4 Dynamic Memory Management
 
 Dynamic memory allocation is used wherever the size of the data structures depends on the input. Appropriate memory deallocation is provided to prevent memory leaks and allow repeated use of the library.
 
 
 
-## 7. Compilation and Integration
+## 6. Compilation and Integration
 
 The source files are compiled and linked together to create an executable demonstration application or to integrate the library functionalities into another C program.
 
@@ -194,4 +154,3 @@ The public header file is included in programs that use the library:
 The Makefile provides a convenient way to compile the required source files and link them with the demonstration program.
 
 Detailed compilation commands and usage instructions are provided in the Compilation and Usage section of the documentation.
-

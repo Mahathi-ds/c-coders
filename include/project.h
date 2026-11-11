@@ -47,8 +47,10 @@ int sentence_split(char *text, char sentences[][SENTENCE_SIZE],int max_sentences
 int make_lower(char text[]);
 int make_upper(char text[]);
 
-void text_normalization(char *text, Option opt);
-int sentence_split(char *text,char sentences[][500],int max_sentences);
+void text_normalization_n(char *text, size_t size, Option opt);
+
+/* Writes the contraction-expanded copy of src into dst (at most size bytes) */
+void expand_contractions(const char *src, char *dst, size_t size);int sentence_split(char *text,char sentences[][500],int max_sentences);
 // int calculate_tfidf(const char *files[],int number_of_files,const char *target_word);
 
 int stop_words(char stopwords[][100]);
@@ -154,4 +156,50 @@ NaiveBayesModel Naivebayes_fit(char **docs, char **labels, int num_docs);
 char **Naivebayes_predict( NaiveBayesModel model, char **test_docs, int num_docs);
 
 void NaiveBayes_free(NaiveBayesModel *model);
+
+
+typedef enum {
+    SENTIMENT_NEGATIVE = -1,
+    SENTIMENT_NEUTRAL = 0,
+    SENTIMENT_POSITIVE = 1
+} Sentiment;
+
+typedef struct {
+    int positive_count;
+    int negative_count;
+    double score;
+    Sentiment sentiment;
+} SentimentResult;
+
+int sentiment_analyze(
+    const TokenList *tokens,
+    SentimentResult *result
+);
+
+typedef struct {
+    char *word;
+    size_t frequency;
+} Keyword;
+
+/* Keyword list structure */
+typedef struct {
+    Keyword *keywords;
+    size_t count;
+    size_t capacity;
+} KeywordList;
+
+/* Extract keywords from already-tokenized,
+   stop-word-free input tokens */
+int nlp_extract_keywords(
+    struct word *const tokens[],
+    size_t token_count,
+    size_t max_keywords,
+    KeywordList *result
+);
+
+/* Free allocated keyword list memory */
+void nlp_keyword_list_free(KeywordList *list);
+
+
 #endif
+
