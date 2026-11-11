@@ -32,8 +32,7 @@ void nlp_token_list_free(TokenList *list);
 
 
 /* --- Text Processing & Algorithms --- */
-void nlp_normalize_case(char *text);
-TokenList *nlp_tokenize_words(const char *text);
+
 void nlp_stem_word(char *word);
 FreqList *nlp_word_frequency(TokenList *tokens);
 TokenList *nlp_generate_ngrams(TokenList *tokens, int n);
@@ -61,13 +60,106 @@ struct word{
 
 #define SPECIAL_CHARACTER_REMOVAL_FALSE \
     (Option){1, 1, 0, 1}
+#define KEEP_DIGITS_AND_PUNCTUATION \
+    (Option){0, 0, 1, 1}
 
-#define EXTRA_SPACE_REMOVAL_FALSE \
-    (Option){1, 1, 1, 0}
-void make_lower(char text[]);
+#define KEEP_DIGITS_AND_SPECIAL \
+    (Option){0, 1, 0, 1}
+
+#define KEEP_PUNCTUATION_AND_SPECIAL \
+    (Option){1, 0, 0, 1}
+
+#define KEEP_ALL \
+    (Option){0, 0, 0, 1}
+
+#define DEFAULT -1
+#define SENTENCE_SIZE 500
+int make_lower(char text[]);
+int make_upper(char text[]);
+/* Expands contractions (isn't -> is not), then applies the Option rules.
+ * Expansion makes text longer: the buffer must have room for about 2x the
+ * current length. Use text_normalization_n() if you know the real size. */
 void text_normalization(char *text, Option opt);
+void text_normalization_n(char *text, size_t size, Option opt);
+
+/* Writes the contraction-expanded copy of src into dst (at most size bytes) */
+void expand_contractions(const char *src, char *dst, size_t size);
 int sentence_split(char *text,char sentences[][500],int max_sentences);
-int calculate_tfidf(const char *files[],int number_of_files,const char *target_word);
+
+int stop_words(char stopwords[][100]);
+int remove_stopwords(struct word *tokens,int keep_negations);
+
+extern int rear;
+struct word create(void);
+struct word *word_tokenize(char text[]);
+
+typedef struct {
+    char **words;
+    int size;
+    int capacity;
+} Vocab;
+
+typedef struct {
+    int **vectors;
+    int num_docs;
+    Vocab vocab;
+
+} VectorizerResult;
+
+typedef struct{
+    char *label;
+    int count;
+    double prob;
+}prior;
+
+
+
+typedef struct {
+    char *label;
+    WordFreq *word_counts;
+    int size;
+} ClassWordCounts;
+
+typedef struct{
+    char *class;
+    int count;
+}classcount;
+
+typedef struct {
+    char *word;
+    classcount *classes;
+    int size;
+}wordclasscounts;
+
+
+typedef struct {
+    char *label;
+    int *doc_indices;
+    int count;
+} ClassDocuments;
+
+typedef struct {
+    ClassDocuments *classes;
+    int num_classes;
+} DocumentGroups;
+
+
+typedef struct {
+    Vocab vocab;
+    prior *priors;
+    ClassWordCounts *class_word;
+    wordclasscounts *word_class;
+    int num_classes;
+} NaiveBayesModel;
+
+VectorizerResult vectoriser(char **docs,int num_docs);
+NaiveBayesModel Naivebayes_fit(char **docs, char **labels, int num_docs);
+char **Naivebayes_predict( NaiveBayesModel model, char **test_docs, int num_docs);
+
+void NaiveBayes_free(NaiveBayesModel *model);
+
+
+// sentiment
 
 typedef enum {
     SENTIMENT_NEGATIVE = -1,
