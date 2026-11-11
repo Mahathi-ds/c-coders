@@ -72,225 +72,393 @@ void text_normalization(char *text, Option opt);
 
 ---
 
-## 3. Sentence Splitting
 
-### 3.1 Description
+## 2. Sentence Splitting
 
-Sentence splitting is the process of dividing a paragraph or a larger text into individual sentences.
+### Description
 
-It is useful when sentence-level processing or analysis is required.
+Sentence splitting divides a given text into individual sentences. In this implementation, sentences are identified using full stops (`.`), exclamation marks (`!`), and question marks (`?`). The extracted sentences are stored in a two-dimensional character array.
 
-### 3.2 Working Principle
+### Function Prototype
 
-1. The input text is scanned character by character.
-2. Sentence-ending punctuation marks are identified.
-3. The text is divided at the identified boundaries.
-4. Individual sentences are stored separately.
+```c
+int sentence_split(char *text, char sentences[][SENTENCE_SIZE],
+                   int max_sentences);
+```
 
-Common sentence-ending punctuation marks include:
+### Parameters
 
-- Full stop (.)
-- Question mark (?)
-- Exclamation mark (!)
+- `text`: The input null-terminated string to be divided into sentences.
+- `sentences`: A two-dimensional character array where the extracted sentences are stored.
+- `max_sentences`: Maximum number of sentences to extract. If set to `DEFAULT`, the function uses the length of the input text as the maximum limit.
 
-### 3.3 Example
+### Return Value
+
+- Returns the number of sentences successfully extracted.
+- Returns `0` if the input pointers are `NULL` or `max_sentences` is non-positive.
+
+### Usage
+
+Call `sentence_split()` by passing the input text, the array to store the sentences, and the maximum number of sentences.
+
+```c
+char sentences[100][SENTENCE_SIZE];
+
+int count = sentence_split(text, sentences, 100);
+
+for (int i = 0; i < count; i++)
+{
+    printf("%s\n", sentences[i]);
+}
+```
+
+To use the default maximum limit:
+
+```c
+int count = sentence_split(text, sentences, DEFAULT);
+```
+
+### Example
 
 **Input:**
+
 ```text
-"NLP is interesting. It has many applications! Do you like it?"
-```
-
-**Output:**
-```text
-Sentence 1: NLP is interesting.
-Sentence 2: It has many applications!
-Sentence 3: Do you like it?
-```
-
----
-
-## 4. Word Tokenisation
-
-### 4.1 Description
-
-Word tokenisation is the process of breaking a sentence or a document into smaller units called tokens, which generally correspond to individual words.
-
-Tokenisation is one of the fundamental steps in NLP because most subsequent operations work on individual tokens rather than complete paragraphs.
-
-### 4.2 Working Principle
-
-1. The input text is scanned to identify individual words.
-2. Delimiters such as spaces and punctuation are handled according to the tokenisation rules.
-3. Individual tokens are extracted.
-4. The resulting tokens are stored for further processing.
-
-### 4.3 Example
-
-**Input:**
-```text
-"Natural Language Processing is interesting."
-```
-
-**Output:**
-```text
-Token 1: Natural
-Token 2: Language
-Token 3: Processing
-Token 4: is
-Token 5: interesting
-```
-
----
-
-## 5. Case Normalisation
-
-### 5.1 Description
-
-Case normalisation converts text into a consistent letter case, usually lowercase.
-
-This ensures that words differing only in capitalisation are treated as the same word during subsequent operations.
-
-For example, "Apple", "APPLE", and "apple" are converted into the same representation.
-
-### 5.2 Working Principle
-
-1. The input text is traversed character by character.
-2. Uppercase alphabetic characters are identified.
-3. These characters are converted into lowercase.
-4. Other characters are retained or handled according to the implementation.
-
-### 5.3 Example
-
-**Input:**
-```text
-"Natural LANGUAGE Processing"
-```
-
-**Output:**
-```text
-"natural language processing"
-```
-
----
-
-## 6. Stop-word Removal
-
-### 6.1 Description
-
-Stop words are commonly occurring words that often contribute relatively little information to certain NLP tasks.
-
-Examples include:
-
-- is
-- the
-- a
-- an
-- and
-- of
-- in
-- to
-
-Stop-word removal eliminates these words from the processed text to reduce unnecessary tokens and focus on more informative terms.
-
-### 6.2 Working Principle
-
-1. The input text is tokenised into individual words.
-2. Each token is checked against a predefined collection of stop words.
-3. Tokens found in the stop-word collection are removed.
-4. The remaining tokens are retained for further processing.
-
-### 6.3 Example
-
-**Input:**
-```text
-"The student is studying the subject of NLP."
-```
-
-**Stop words removed:**
-```text
-the, is, of
-```
-
-**Output:**
-```text
-student studying subject NLP
-```
-
----
-
-## 7. Word Frequency Analysis
-
-### 7.1 Description
-
-Word frequency analysis determines how many times each distinct word occurs in a document or a collection of documents.
-
-It helps identify frequently occurring terms and provides a basic statistical representation of textual data.
-
-### 7.2 Working Principle
-
-1. The input text is tokenised into individual words.
-2. Each word is checked against the existing collection of unique words.
-3. If the word already exists, its frequency is incremented.
-4. Otherwise, a new entry is created with an initial frequency of one.
-5. The resulting collection contains each distinct word and its corresponding frequency.
-
-### 7.3 Example
-
-**Input:**
-```text
-"data science is interesting and data science is useful"
+Hello everyone! Welcome to NLP. How are you?
 ```
 
 **Output:**
 
-| Word | Frequency |
-|---|---:|
-| data | 2 |
-| science | 2 |
-| is | 2 |
-| interesting | 1 |
-| and | 1 |
-| useful | 1 |
+```text
+Hello everyone!
+Welcome to NLP.
+How are you?
+```
 
-### 7.4 Applications
-
-- Identifying frequently occurring words.
-- Building vocabulary representations.
-- Generating document-term matrices.
-- Supporting TF-IDF calculations and other NLP algorithms.
 
 ---
 
-## 8. N-gram Generation
 
-### 8.1 Description
+## 3. Word Tokenization
 
-An N-gram is a sequence of N consecutive tokens extracted from a text.
+### Description
 
-N-grams help capture relationships between neighbouring words and provide more contextual information than individual words.
+Word tokenization splits the input text into individual tokens. In this implementation, words, punctuation marks, and digits are separated into individual tokens. The generated tokens are stored in a global array named `stack`.
 
-The different types include:
+### Function Prototype
 
-- **Unigrams (N = 1):** Individual words.
-- **Bigrams (N = 2):** Consecutive pairs of words.
-- **Trigrams (N = 3):** Consecutive groups of three words.
-
-### 8.2 Working Principle
-
-1. The input text is tokenised into individual words.
-2. A value of N is selected.
-3. A sliding window of size N is moved across the token sequence.
-4. The consecutive tokens within each window are combined to form an N-gram.
-5. The generated N-grams are stored or returned.
-
-### 8.3 Example
-
-**Input:**
-```text
-"I love natural language processing"
+```c
+struct word *word_tokenize(char text[]);
 ```
 
-**Unigrams:**
+### Parameters
+
+- `text`: The input null-terminated string to be tokenized.
+
+### Return Value
+
+- Returns a pointer to the global `stack` array containing the generated tokens.
+- Returns `NULL` if the input text is `NULL`.
+
+The global variable `rear` stores the number of tokens generated.
+
+### Usage
+
+Call `word_tokenize()` by passing the input string. Use the global variable `rear` to determine the number of tokens generated.
+
+```c
+struct word *tokens;
+
+tokens = word_tokenize(text);
+
+if (tokens != NULL)
+{
+    for (int i = 0; i < rear; i++)
+    {
+        printf("%s\n", tokens[i].data);
+    }
+}
+```
+
+**Note:** The returned pointer refers to a global array. Do not free it. Each new call to `word_tokenize()` overwrites the previous token data, so copy the tokens if they need to be retained.
+
+### Example
+
+**Input:**
+
+```text
+Hello123, world!
+```
+
+**Output:**
+
+```text
+Hello
+1
+2
+3
+,
+world
+!
+```
+
+
+
+---
+
+
+## 4. Case Normalisation
+
+### Description
+
+Case normalisation converts text into either lowercase or uppercase. This implementation provides two functions, `make_lower()` and `make_upper()`, which modify the input string directly.
+
+### Function Prototypes
+
+```c
+int make_lower(char text[]);
+int make_upper(char text[]);
+```
+
+### Parameters
+
+- `text`: The input null-terminated string whose case needs to be changed.
+
+### Return Value
+
+- Returns `0` if the operation is successful.
+- Returns `-1` if the input string is `NULL`.
+
+### Usage
+
+To convert a string into lowercase:
+
+```c
+char text[] = "Hello WORLD";
+make_lower(text);
+printf("%s", text);
+```
+
+To convert a string into uppercase:
+
+```c
+char text[] = "Hello WORLD";
+make_upper(text);
+printf("%s", text);
+```
+
+### Example
+
+**Input:**
+
+```text
+Hello WORLD
+```
+
+**Output after make_lower():**
+
+```text
+hello world
+```
+
+**Output after make_upper():**
+
+```text
+HELLO WORLD
+```
+
+
+---
+
+
+## 6. Stop Word Removal
+
+### Description
+
+Stop word removal eliminates commonly occurring words from a tokenized text. This implementation reads stop words from the file `data/EN-Stopwords.txt` and removes matching tokens from the input token array.
+
+It also provides an option to preserve negation words (`no`, `not`, and `nor`) during removal.
+
+### Function Prototypes
+
+```c
+int stop_words(char stopwords[][100]);
+int remove_stopwords(struct word *tokens, int keep_negations);
+```
+
+### Parameters
+
+**For `stop_words()`:**
+
+- `stopwords`: A two-dimensional character array in which the stop words read from the file are stored.
+
+**For `remove_stopwords()`:**
+
+- `tokens`: Pointer to the token array from which stop words need to be removed.
+- `keep_negations`: Controls whether negation words should be retained.
+  - `1`: Preserves `no`, `not`, and `nor`.
+  - `0`: Allows these words to be removed if they are present in the stop-word list.
+
+### Return Value
+
+**For `stop_words()`:**
+
+- Returns the number of stop words successfully read from the file.
+- Returns `-1` if the stop-word file cannot be opened.
+
+**For `remove_stopwords()`:**
+
+- Returns `0` if stop-word removal is successful.
+- Returns `-1` if the token pointer is `NULL`, no tokens are available, or the stop-word file cannot be opened.
+
+### Usage
+
+Call `remove_stopwords()` after tokenizing the input text. Pass the token array and specify whether negation words should be preserved.
+
+```c
+struct word *tokens;
+
+tokens = word_tokenize(text);
+
+if (tokens != NULL)
+{
+    remove_stopwords(tokens, 1);
+
+    for (int i = 0; i < rear; i++)
+    {
+        printf("%s\n", tokens[i].data);
+    }
+}
+```
+
+### Example
+
+**Input tokens:**
+
+```text
+this
+is
+not
+a
+good
+book
+```
+
+**Output with `keep_negations = 1` (assuming the other listed words are present in the stop-word file):**
+
+```text
+not
+good
+book
+```
+
+## 8. Word Frequency
+
+### Description
+
+Word frequency counts the occurrences of each unique word in a given token list. It stores each distinct word along with its corresponding frequency in a `FreqList`.
+
+### Function Prototype
+
+```c
+FreqList *nlp_word_frequency(TokenList *tokens);
+```
+
+### Parameters
+
+- `tokens`: Pointer to the input `TokenList` containing the words whose frequencies need to be calculated.
+
+### Return Value
+
+- Returns a pointer to a newly allocated `FreqList` containing unique words and their frequencies.
+- Returns `NULL` if the input is invalid or memory allocation fails.
+
+### Usage
+
+Pass the input token list to `nlp_word_frequency()`.
+
+```c
+FreqList *freq = nlp_word_frequency(&tokens);
+
+if (freq != NULL)
+{
+    for (size_t i = 0; i < freq->count; i++)
+    {
+        printf("%s : %zu\n",
+               freq->frequencies[i].word,
+               freq->frequencies[i].count);
+    }
+}
+```
+
+### Example
+
+**Input tokens:**
+
+```text
+apple
+banana
+apple
+orange
+banana
+apple
+```
+
+**Output:**
+
+```text
+apple : 3
+banana : 2
+orange : 1
+```
+
+
+---
+
+
+## 7. N-gram Generation
+
+### Description
+
+N-gram generation creates sequences of consecutive tokens from a given token list. The value of `n` determines the number of tokens in each sequence.
+
+For example, a bigram contains two consecutive tokens, while a trigram contains three. The generated n-grams are stored in a new `TokenList`.
+
+### Function Prototype
+
+```c
+TokenList *nlp_generate_ngrams(TokenList *tokens, int n);
+```
+
+### Parameters
+
+- `tokens`: Pointer to the input `TokenList` containing the tokens.
+- `n`: Number of consecutive tokens to be combined into each n-gram.
+
+### Return Value
+
+- Returns a pointer to a newly allocated `TokenList` containing the generated n-grams.
+- Returns `NULL` if the input is invalid, `n` is non-positive, there are insufficient tokens, or memory allocation fails.
+
+### Usage
+
+Pass the input token list and the desired n-gram size.
+
+```c
+TokenList *ngrams = nlp_generate_ngrams(&tokens, 2);
+
+if (ngrams != NULL)
+{
+    for (size_t i = 0; i < ngrams->count; i++)
+    {
+        printf("%s\n", ngrams->tokens[i]);
+    }
+}
+```
+
+### Example
+
+**Input tokens:**
+
 ```text
 I
 love
@@ -299,7 +467,8 @@ language
 processing
 ```
 
-**Bigrams:**
+**For n = 2 (Bigrams):**
+
 ```text
 I love
 love natural
@@ -307,101 +476,78 @@ natural language
 language processing
 ```
 
-**Trigrams:**
+**For n = 3 (Trigrams):**
+
 ```text
 I love natural
 love natural language
 natural language processing
 ```
 
-### 8.4 Applications
-
-- Capturing short word sequences.
-- Identifying common phrases.
-- Supporting text classification.
-- Improving keyword and phrase extraction.
-
 ---
 
-## 9. Basic Stemming
 
-### 9.1 Description
+## 5. Stemming
 
-Stemming is the process of reducing words to their root or stem form by removing or modifying common word suffixes.
+### Description
 
-It helps group different variations of a word into a common representation.
+Stemming reduces words to their root or stem form by removing or replacing common word endings. This implementation follows the Porter stemming algorithm and modifies the input word directly.
 
-For example, words such as "playing", "played", and "plays" may be reduced to "play".
+### Function Prototype
 
-### 9.2 Working Principle
-
-1. The input word is examined for common suffixes.
-2. The word is checked against the stemming rules implemented in the library.
-3. Recognised suffixes are removed or modified.
-4. The resulting stem is returned.
-
-### 9.3 Example
-
-| Input Word | Possible Stem |
-|---|---|
-| playing | play |
-| played | play |
-| studies | studi |
-| running | run |
-
-The resulting stem does not necessarily have to be a valid dictionary word.
-
-### 9.4 Applications
-
-- Reducing vocabulary size.
-- Grouping morphological variations.
-- Improving text matching.
-- Supporting information retrieval and text classification.
-
----
-
-## 10. Text Processing Pipeline
-
-The individual preprocessing functions can be combined to form a complete text-processing pipeline.
-
-A typical pipeline consists of the following stages:
-
-1. Read the input text.
-2. Perform text normalisation.
-3. Split the text into sentences if required.
-4. Apply case normalisation.
-5. Tokenise the text into words.
-6. Remove stop words.
-7. Apply stemming.
-8. Perform word frequency analysis or generate N-grams.
-9. Pass the processed representation to the required NLP algorithm.
-
-### 10.1 Pipeline Diagram
-
-```mermaid
-flowchart TD
-    A[Raw Text] --> B[Text Normalisation]
-    B --> C[Sentence Splitting]
-    C --> D[Case Normalisation]
-    D --> E[Word Tokenisation]
-    E --> F[Stop-word Removal]
-    F --> G[Stemming]
-    G --> H[Processed Tokens]
-    H --> I[Word Frequency Analysis]
-    H --> J[N-gram Generation]
-    I --> K[Text Representation]
-    J --> K
-    K --> L[Further NLP Analysis]
+```c
+void nlp_stem_word(char *word);
 ```
 
-The pipeline is flexible. Individual functions can also be called independently, depending on the requirements of the application.
+### Parameters
+
+- `word`: The input null-terminated string to be stemmed.
+
+### Return Value
+
+- Does not return a value (`void`).
+- If the input is `NULL` or has two or fewer characters, no stemming is performed.
+
+### Stemming Rules
+
+The implementation applies the following rules in sequence:
+
+1. **Plural removal:** Converts plural forms into their singular forms, such as removing plural endings or simplifying them.
+2. **Past tense and continuous forms:** Removes past-tense and `-ing` endings when the remaining word contains a vowel, followed by additional adjustments where necessary.
+3. **Y to I conversion:** Changes a final `y` to `i` when the word contains another vowel and does not end in `ay`.
+4. **Derivational suffix replacement:** Replaces longer word endings with shorter forms, such as changing endings that indicate a process or quality into simpler forms.
+5. **Suffix removal:** Removes certain endings related to qualities, states, and grammatical forms when the word has sufficient stem length.
+6. **Final adjustments:** Removes a final `e` or repeated `l` under specific conditions based on the word structure.
+
+### Usage
+
+Pass the word to `nlp_stem_word()`. The original string is modified directly.
+
+```c
+char word[] = "running";
+
+nlp_stem_word(word);
+
+printf("%s", word);
+```
+
+### Example
+
+**Input:**
+
+```text
+running
+studies
+relational
+```
+
+**Output:**
+
+```text
+run
+studi
+relat
+```
 
 ---
 
-## 11. Conclusion
-
-The text-processing module provides the fundamental operations required to transform raw textual data into structured representations.
-
-By implementing normalisation, sentence splitting, tokenisation, stop-word removal, frequency analysis, N-gram generation, and stemming, the library provides a foundation for more advanced NLP operations.
-
-These functionalities can be combined with vocabulary generation, vectorisation, classification, and similarity algorithms to perform a variety of text-analysis tasks.

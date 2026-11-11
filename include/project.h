@@ -84,7 +84,6 @@ void nlp_token_list_free(TokenList *list);
 
 
 void nlp_normalize_case(char *text);
-TokenList *nlp_tokenize_words(const char *text);
 void nlp_stem_word(char *word);
 FreqList *nlp_word_frequency(TokenList *tokens);
 TokenList *nlp_generate_ngrams(TokenList *tokens, int n);
@@ -111,14 +110,10 @@ typedef struct{
 }prior;
 
 
-typedef struct {
-    char *word;
-    int count;
-} WordCount;
 
 typedef struct {
     char *label;
-    WordCount *word_counts;
+    WordFreq *word_counts;
     int size;
 } ClassWordCounts;
 

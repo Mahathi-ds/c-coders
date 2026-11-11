@@ -188,7 +188,7 @@ ClassWordCounts *build_class_word_counts(VectorizerResult result,DocumentGroups 
 
         if (arr[i].label == NULL)
             return NULL;
-        arr[i].word_counts = malloc(vocab_set.size * sizeof(WordCount));
+        arr[i].word_counts = malloc(vocab_set.size * sizeof(WordFreq));
         if (arr[i].word_counts == NULL)
             return NULL;
         strcpy(arr[i].label,class);
@@ -229,7 +229,7 @@ wordclasscounts *build_word_class_counts(VectorizerResult result,DocumentGroups 
         arr[i].word = malloc(strlen(word) + 1);
         if (arr[i].word == NULL)
             return NULL;
-        arr[i].classes = malloc(grps.num_classes*sizeof(classcount));
+        arr[i].classes = malloc(grps.num_classes*sizeof());
         arr[i].size=grps.num_classes;
         if (arr[i].classes == NULL)
             return NULL;
