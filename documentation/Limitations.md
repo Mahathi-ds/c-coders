@@ -34,9 +34,7 @@ This library is built to teach and demonstrate basic NLP in C. It is simple on p
 
 ### Stop-word removal
 
-- Reads the stop words from `data/EN-Stopwords.txt`. If the file is missing or you run the program from the wrong folder, the function returns `-1`.
 - The stop-word list is English only.
-- Only `no`, `not` and `nor` are protected when `keep_negations = 1`. Other negative words (such as `never`) may still be removed if they appear in the stop-word file.
 - Each stop word can hold at most 99 characters.
 
 ### Word frequency

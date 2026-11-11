@@ -53,8 +53,8 @@ void text_normalization_n(char *text, size_t size, Option opt);
 void expand_contractions(const char *src, char *dst, size_t size);int sentence_split(char *text,char sentences[][500],int max_sentences);
 // int calculate_tfidf(const char *files[],int number_of_files,const char *target_word);
 
-int stop_words(char stopwords[][100]);
-int remove_stopwords(struct word *tokens,int keep_negations);
+int stop_words(const char *filename,char stopwords[][100]);
+int remove_stopwords(struct word *tokens,const char *filename,const char **negations,int neg_count);
 
 extern int rear;
 struct word create(void);

@@ -9,17 +9,17 @@ void test_normal() {
     printf("\nTest 1 - Normal case\n");
     printf("Input : %s\n", words);
 
-    struct word **lst = word_tokenize(words);
+    struct word *lst = word_tokenize(words);
     if(lst == NULL) {
         printf("Output: Tokenization failed\n");
         return;
     }
 
-    int status = remove_stopwords(lst);
+    int status = remove_stopwords(lst, "data/EN-Stopwords.txt",NULL,0);
     printf("Output: ");
     if(status == 0) {
         for(int i=0; i<rear; i++){
-            printf("%s ", lst[i]->data);
+            printf("%s ", lst[i].data);
         }
         printf("\n");
     }
@@ -32,13 +32,13 @@ void test_only_stopwords() {
     char words[] = "i was doing it for them";
     printf("\nTest 2 - Only stopwords\n");
     printf("Input : %s\n", words);
-    struct word **lst = word_tokenize(words);
+    struct word *lst = word_tokenize(words);
     if(lst == NULL) {
         printf("Output: Tokenization failed\n");
         return;
     }
 
-    int status = remove_stopwords(lst);
+    int status = remove_stopwords(lst,"data/EN-Stopwords.txt",NULL,0);
 
     printf("Output: Token count = %d\n", rear);
     printf("Expected token count: 0\n");
@@ -55,18 +55,18 @@ void test_no_stopwords() {
     printf("\nTest 3 - No stopwords\n");
     printf("Input : %s\n", words);
 
-    struct word **lst = word_tokenize(words);
+    struct word *lst = word_tokenize(words);
     if(lst == NULL) {
         printf("Output: Tokenization failed\n");
         return;
     }
 
-    int status = remove_stopwords(lst);
+    int status = remove_stopwords(lst, "data/EN-Stopwords.txt",NULL,0);
 
     printf("Output: ");
     if(status == 0) {
         for(int i=0; i<rear; i++){
-            printf("%s ", lst[i]->data);
+            printf("%s ", lst[i].data);
         }
         printf("\n");
     }
@@ -89,9 +89,9 @@ void test_empty() {
     printf("\nTest 4 - Empty input\n");
     printf("Input : %s\n", words);
 
-    struct word **lst = word_tokenize(words);
+    struct word *lst = word_tokenize(words);
 
-    int status = remove_stopwords(lst);
+    int status = remove_stopwords(lst, "data/EN-Stopwords.txt",NULL,0);
 
     printf("Output: Token count = %d\n", rear);
     printf("Removal status: %d\n", status);
@@ -107,18 +107,18 @@ void test_repeated() {
     printf("\nTest 5 - Repeated stopwords\n");
     printf("Input : %s\n", words);
 
-    struct word **lst = word_tokenize(words);
+    struct word *lst = word_tokenize(words);
     if(lst == NULL) {
         printf("Output: Tokenization failed\n");
         return;
     }
 
-    int status = remove_stopwords(lst);
+    int status = remove_stopwords(lst, "data/EN-Stopwords.txt",NULL,0);
 
     printf("Output: ");
     if(status == 0) {
         for(int i=0; i<rear; i++){
-            printf("%s ", lst[i]->data);
+            printf("%s ", lst[i].data);
         }
         printf("\n");
     }
@@ -129,8 +129,8 @@ void test_repeated() {
     printf("Expected: cat sleeping\n");
 
     if(status == 0 && rear == 2 &&
-       strcmp(lst[0]->data, "cat") == 0 &&
-       strcmp(lst[1]->data, "sleeping") == 0)
+       strcmp(lst[0].data, "cat") == 0 &&
+       strcmp(lst[1].data, "sleeping") == 0)
         printf("Result: PASS\n");
     else
         printf("Result: FAIL\n");
@@ -148,13 +148,13 @@ void test_large_input() {
 
     printf("\nTest 6 - Large input\n");
     printf("Input : 890 repetitions of \"the \" and 10 repetitions of \"cat \"\n");
-    struct word **lst = word_tokenize(words);
+    struct word *lst = word_tokenize(words);
     if(lst == NULL) {
         printf("Output: Tokenization failed\n");
         return;
     }
 
-    int status = remove_stopwords(lst);
+    int status = remove_stopwords(lst, "data/EN-Stopwords.txt",NULL,0);
 
     printf("Output: Token count = %d\n", rear);
     printf("Expected token count: 10\n");
@@ -164,7 +164,54 @@ void test_large_input() {
     else
         printf("Result: FAIL\n");
 }
+void test_negations()
+{
+    char words1[] = "I do not like this product and I never will";
+    char words2[] = "I do not like this product and I never will";
 
+    const char *negations[] = {"not", "never"};
+
+    printf("\nTest 7 - Negation handling\n");
+    printf("Input: I do not like this product and I never will\n");
+
+    // Case 1: No negation list provided
+    struct word *lst1 = word_tokenize(words1);
+
+    int status1 = remove_stopwords(
+        lst1,
+        "data/EN-Stopwords.txt",
+        NULL,
+        0
+    );
+
+    printf("\nWithout negation list:\n");
+
+    if (status1 == 0)
+    {
+        for (int i = 0; i < rear; i++)
+            printf("%s ", lst1[i].data);
+        printf("\n");
+    }
+
+    // Case 2: Custom negation list provided
+    struct word *lst2 = word_tokenize(words2);
+
+    int status2 = remove_stopwords(
+        lst2,
+        "data/EN-Stopwords.txt",
+        negations,
+        2
+    );
+
+    printf("\nWith negation list (not, never):\n");
+
+    if (status2 == 0)
+    {
+        for (int i = 0; i < rear; i++)
+            printf("%s ", lst2[i].data);
+        printf("\n");
+    }
+}
 int main(void) {
 
     printf("========== STOP-WORD REMOVAL TESTS ==========\n");
@@ -175,6 +222,7 @@ int main(void) {
     test_empty();
     test_repeated();
     test_large_input();
+    test_negations();
 
 
     return 0;

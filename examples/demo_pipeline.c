@@ -157,8 +157,8 @@ int main(void)
 
     printf("\n========== STEP 5: STOP-WORD REMOVAL ==========\n");
 
-    int keep_negations = 1;
-
+    const char *negations[] = {"no", "not", "nor", "never", "neither"};
+    int negation_count = 5;
     for (i = 0; i < sentence_count; i++)
     {
         struct word temp_tokens[MAX_WORDS];
@@ -176,10 +176,11 @@ int main(void)
         rear = old_count;
 
         int status = remove_stopwords(
-            temp_tokens,
-            keep_negations
-        );
-
+        temp_tokens,
+        "data/EN-Stopwords.txt",
+        NULL,
+        0
+    );
         if (status == -1)
         {
             printf("Stop-word removal failed.\n");
