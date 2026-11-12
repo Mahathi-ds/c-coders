@@ -1,0 +1,1 @@
+A data scientist trained a neural network to recognize objects in photographs. The model learned patterns from thousands of images. The team evaluated its accuracy using a separate dataset.

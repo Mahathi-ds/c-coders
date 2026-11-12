@@ -102,9 +102,9 @@ static void free_copied_tokens(char **words, int count)
 }
 
 
-/* Free a VectorizerResult */
+/* Free a PairVectorizerResult */
 
-static void free_vectorizer(VectorizerResult *result)
+static void free_vectorizer(PairVectorizerResult *result)
 {
     int i;
 
@@ -128,7 +128,7 @@ static void free_vectorizer(VectorizerResult *result)
 /* Add a unique word to the vocabulary */
 
 static int add_vocabulary_word(
-    VectorizerResult *result,
+    PairVectorizerResult *result,
     const char *word)
 {
     char **temp;
@@ -182,7 +182,7 @@ static int add_vocabulary_word(
 static void mark_document_words(
     char **words,
     int count,
-    VectorizerResult *result,
+    PairVectorizerResult *result,
     int *vector)
 {
     int i;
@@ -206,7 +206,7 @@ static void mark_document_words(
 
 /* Create a common vocabulary and binary vectors */
 
-VectorizerResult *binary_vectorizer(char *doc1, char *doc2)
+PairVectorizerResult *binary_vectorizer(char *doc1, char *doc2)
 {
     char **tokens1;
     char **tokens2;
@@ -216,7 +216,7 @@ VectorizerResult *binary_vectorizer(char *doc1, char *doc2)
 
     int i;
 
-    VectorizerResult *result;
+    PairVectorizerResult *result;
 
     if (doc1 == NULL || doc2 == NULL)
     {
@@ -248,7 +248,7 @@ VectorizerResult *binary_vectorizer(char *doc1, char *doc2)
         return NULL;
     }
 
-    result = malloc(sizeof(VectorizerResult));
+    result = malloc(sizeof(PairVectorizerResult));
 
     if (result == NULL)
     {
@@ -345,7 +345,7 @@ VectorizerResult *binary_vectorizer(char *doc1, char *doc2)
 
 double jaccard(char *doc1, char *doc2)
 {
-    VectorizerResult *result;
+    PairVectorizerResult *result;
 
     int intersection = 0;
     int union_count = 0;

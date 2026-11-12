@@ -6,7 +6,7 @@
 
 
 
-struct word stack[1000];  
+struct word stack[100000];  
 int rear=0;
 
 struct word create(){

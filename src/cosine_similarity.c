@@ -6,7 +6,6 @@
 #include "project.h"
 
 
-/* Initialize a frequency list */
 
 static void initialize_list(FreqList *list)
 {
@@ -16,7 +15,6 @@ static void initialize_list(FreqList *list)
 }
 
 
-/* Free a frequency list */
 
 static void free_list(FreqList *list)
 {
@@ -35,7 +33,6 @@ static void free_list(FreqList *list)
 }
 
 
-/* Find a word in a frequency list */
 
 static int find_word(FreqList *list, const char *word)
 {
@@ -53,7 +50,6 @@ static int find_word(FreqList *list, const char *word)
 }
 
 
-/* Add a word to the frequency list */
 
 static int add_word(FreqList *list, const char *word)
 {
@@ -114,7 +110,6 @@ static int add_word(FreqList *list, const char *word)
 }
 
 
-/* Calculate word frequencies from a document */
 
 static int calculate_word_frequencies(
     const char *filename,
@@ -188,10 +183,6 @@ static int calculate_word_frequencies(
         return 0;
     }
 
-    /*
-       The tokenizer returns a static array.
-       Therefore, do not free tokens or tokens[i].
-    */
 
     for (i = 0; i < token_count; i++)
     {
@@ -205,7 +196,6 @@ static int calculate_word_frequencies(
 }
 
 
-/* Calculate cosine similarity between two documents */
 
 int calculate_cosine_similarity(
     const char *file1,
@@ -248,7 +238,6 @@ int calculate_cosine_similarity(
         return 0;
     }
 
-    /* Calculate dot product */
 
     for (i = 0; i < list1.count; i++)
     {
@@ -265,7 +254,6 @@ int calculate_cosine_similarity(
         }
     }
 
-    /* Calculate magnitude of document 1 */
 
     for (i = 0; i < list1.count; i++)
     {
@@ -276,7 +264,6 @@ int calculate_cosine_similarity(
 
     magnitude1 = sqrt(magnitude1);
 
-    /* Calculate magnitude of document 2 */
 
     for (i = 0; i < list2.count; i++)
     {
@@ -287,13 +274,178 @@ int calculate_cosine_similarity(
 
     magnitude2 = sqrt(magnitude2);
 
-    /* Calculate cosine similarity */
 
     if (magnitude1 != 0.0 && magnitude2 != 0.0)
     {
         *similarity =
             dot_product / (magnitude1 * magnitude2);
     }
+
+    free_list(&list1);
+    free_list(&list2);
+
+    return 1;
+}
+
+/* TF-IDF Based Cosine Similarity */
+
+int calculate_tfidf_cosine_similarity(
+    const char *file1,
+    const char *file2,
+    double *similarity
+)
+{
+    FreqList list1;
+    FreqList list2;
+
+    const char *filenames[2];
+
+    int i;
+    int position;
+
+    double tfidf1;
+    double tfidf2;
+
+    double dot_product = 0.0;
+    double magnitude1 = 0.0;
+    double magnitude2 = 0.0;
+
+    if (file1 == NULL ||
+        file2 == NULL ||
+        similarity == NULL)
+    {
+        return 0;
+    }
+
+    *similarity = 0.0;
+
+    initialize_list(&list1);
+    initialize_list(&list2);
+
+    filenames[0] = file1;
+    filenames[1] = file2;
+
+
+    /* Calculate word frequencies for Document 1 */
+
+    if (!calculate_word_frequencies(file1, &list1))
+    {
+        free_list(&list1);
+        free_list(&list2);
+        return 0;
+    }
+
+
+    /* Calculate word frequencies for Document 2 */
+
+    if (!calculate_word_frequencies(file2, &list2))
+    {
+        free_list(&list1);
+        free_list(&list2);
+        return 0;
+    }
+
+
+    /* Calculate TF-IDF weights for words in Document 1 */
+
+    for (i = 0; i < list1.count; i++)
+    {
+        position = find_word(
+            &list2,
+            list1.frequencies[i].word
+        );
+
+
+        /* TF-IDF of the word in Document 1 */
+
+        if (!calculate_tfidf(
+                file1,
+                list1.frequencies[i].word,
+                filenames,
+                2,
+                &tfidf1))
+        {
+            free_list(&list1);
+            free_list(&list2);
+            return 0;
+        }
+
+
+        /* TF-IDF of the same word in Document 2 */
+
+        if (!calculate_tfidf(
+                file2,
+                list1.frequencies[i].word,
+                filenames,
+                2,
+                &tfidf2))
+        {
+            free_list(&list1);
+            free_list(&list2);
+            return 0;
+        }
+
+
+        /* Calculate Dot Product */
+
+        dot_product += tfidf1 * tfidf2;
+
+
+        /* Calculate Magnitude of Document 1 */
+
+        magnitude1 += tfidf1 * tfidf1;
+
+
+        /* Calculate Magnitude of Document 2 */
+
+        magnitude2 += tfidf2 * tfidf2;
+    }
+
+
+    /* Process words present only in Document 2 */
+
+    for (i = 0; i < list2.count; i++)
+    {
+        position = find_word(
+            &list1,
+            list2.frequencies[i].word
+        );
+
+        if (position == -1)
+        {
+            if (!calculate_tfidf(
+                    file2,
+                    list2.frequencies[i].word,
+                    filenames,
+                    2,
+                    &tfidf2))
+            {
+                free_list(&list1);
+                free_list(&list2);
+                return 0;
+            }
+
+            magnitude2 += tfidf2 * tfidf2;
+        }
+    }
+
+
+    /* Square Root of Magnitudes */
+
+    magnitude1 = sqrt(magnitude1);
+    magnitude2 = sqrt(magnitude2);
+
+
+    /* Final Cosine Similarity */
+
+    if (magnitude1 != 0.0 && magnitude2 != 0.0)
+    {
+        *similarity =
+            dot_product / (magnitude1 * magnitude2);
+    }
+
+
+    /* Free Memory */
 
     free_list(&list1);
     free_list(&list2);

@@ -1,0 +1,3 @@
+The doctor
+prescribed	medicine
+to the patient	for the hospital treatment
