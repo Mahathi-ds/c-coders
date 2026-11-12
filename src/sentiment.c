@@ -1,4 +1,5 @@
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +12,7 @@
 #define INTENSITY_WINDOW 2
 #define MAX_INTENSITY 3.0
 #define MIN_INTENSITY 0.25
-#define CONTRAST_WEIGHT 2.0
+#define CONTRAST_WEIGHT 1.0
 
 #define POSITIVE_FILE "data/positive_words.txt"
 #define NEGATIVE_FILE "data/negative_words.txt"
@@ -193,6 +194,55 @@ static void dictionary_free(Dictionary *dict)
 }
 
 
+/* Copy a user-provided word into dynamically allocated memory. */
+static char *copy_word(const char *word)
+{
+    size_t length = strlen(word);
+    char *copy = malloc(length + 1);
+
+    if (copy == NULL)
+        return NULL;
+
+    memcpy(copy, word, length + 1);
+    return copy;
+}
+
+
+/* Replace a dictionary with words supplied by the caller. */
+static int dictionary_set(
+    Dictionary *dict,
+    const char *words[],
+    size_t count)
+{
+    dictionary_free(dict);
+
+    for (size_t i = 0; i < count; i++) {
+        if (words[i] == NULL || words[i][0] == '\0')
+            continue;
+
+        char *copy = copy_word(words[i]);
+
+        if (copy == NULL)
+            goto error;
+
+        if (dictionary_add(dict, copy) != 0) {
+            free(copy);
+            goto error;
+        }
+    }
+
+    if (dict->count > 1) {
+        qsort(dict->words, dict->count, sizeof(char *), sort_compare);
+    }
+
+    return 0;
+
+error:
+    dictionary_free(dict);
+    return -1;
+}
+
+
 /* Cleanup at program exit */
 static void cleanup_dictionaries(void)
 {
@@ -203,7 +253,55 @@ static void cleanup_dictionaries(void)
 }
 
 
-/* Initialize dictionaries once */
+/* Register cleanup only once, whether using files or custom lists. */
+static int cleanup_registered = 0;
+
+static int register_dictionary_cleanup(void)
+{
+    if (cleanup_registered)
+        return 0;
+
+    if (atexit(cleanup_dictionaries) != 0)
+        return -1;
+
+    cleanup_registered = 1;
+    return 0;
+}
+
+
+/* Public API: use positive and negative words supplied by the caller. */
+int sentiment_set_word_lists(
+    const char *positive_words[],
+    size_t positive_count,
+    const char *negative_words[],
+    size_t negative_count)
+{
+    if ((positive_count > 0 && positive_words == NULL) ||
+        (negative_count > 0 && negative_words == NULL))
+        return -1;
+
+    if (register_dictionary_cleanup() != 0)
+        return -1;
+
+    dictionary_free(&positive);
+    dictionary_free(&negative);
+    dictionaries_initialized = 0;
+
+    if (dictionary_set(&positive, positive_words, positive_count) != 0)
+        return -1;
+
+    if (dictionary_set(&negative, negative_words, negative_count) != 0) {
+        dictionary_free(&positive);
+        dictionary_free(&negative);
+        return -1;
+    }
+
+    dictionaries_initialized = 1;
+    return 0;
+}
+
+
+/* Initialize dictionaries once (file-based fallback). */
 static int initialize_dictionaries(void)
 {
     if (dictionaries_initialized)
@@ -220,7 +318,7 @@ static int initialize_dictionaries(void)
         return -1;
     }
 
-    if (atexit(cleanup_dictionaries) != 0) {
+    if (register_dictionary_cleanup() != 0) {
         dictionary_free(&positive);
         dictionary_free(&negative);
         return -1;
